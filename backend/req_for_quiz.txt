@@ -1,0 +1,5 @@
+  - question: What is the correct syntax to output "Hello World" in Python?
+    category: Python
+    level: 1
+    options: ["print(\"Hello World\")", "echo \"Hello World\"", "printf(\"Hello World\")", "console.log(\"Hello World\")"]
+    answer: 0
