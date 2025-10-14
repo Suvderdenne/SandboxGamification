@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-a0!)p5x8w6&014*f(r1t*ogt+5-8$ad5z7i7x4ov0-4ccnys%i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'firstApp',
+    'quizApp',
 ]
 
 MIDDLEWARE = [
@@ -54,7 +56,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -76,7 +78,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'SBGame.db',
     }
 }
 
@@ -121,3 +123,20 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+
+
+# settings.py (онцгойлох хэсэг)
+INSTALLED_APPS += ['users']
+
+# JWT тохиргоо
+JWT_SECRET = "aosigpoIUASDFH7f7ew^%2934@#"  # production-д env var ашигла!
+JWT_ALGORITHM = "HS256"
+JWT_EXP_HOURS = 24
+
+
+
+
+
