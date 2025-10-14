@@ -1,4 +1,7 @@
-FROM cirrusci/flutter:stable
+FROM ghcr.io/cirruslabs/flutter:latest
+
+# Set user to avoid root warnings
+USER root
 
 WORKDIR /app
 
