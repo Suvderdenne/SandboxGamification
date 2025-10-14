@@ -126,10 +126,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
-
+print("hello world")
 
 # settings.py (онцгойлох хэсэг)
-INSTALLED_APPS += ['users']
+# INSTALLED_APPS += ['users']
 
 # JWT тохиргоо
 JWT_SECRET = "aosigpoIUASDFH7f7ew^%2934@#"  # production-д env var ашигла!

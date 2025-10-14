@@ -50,4 +50,30 @@ You don't need to declare variable types in Python.
       ),
     ],
   ),
+  Lesson(
+    id: "python-zzzz",
+    title: "Python Variableszzzzz",
+    category: "Python Basics",
+    description: "Learn how to declare and use variables in Python.",
+    content: """
+Variables in Python are created when you assign a value to them:
+
+x = 10
+name = "Alice"
+
+You don't need to declare variable types in Python.
+""",
+    quiz: [
+      QuizQuestion(
+        question: "Which of the following is a valid variable name?",
+        options: ["2name", "my_name", "my-name", "class"],
+        answer: 1,
+      ),
+      QuizQuestion(
+        question: "Which keyword is used to declare a variable in Python?",
+        options: ["var", "let", "const", "None of the above"],
+        answer: 3,
+      ),
+    ],
+  ),
 ];

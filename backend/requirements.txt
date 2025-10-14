@@ -1,1 +1,6 @@
-django>= 0.0.0
+Django>=4.2
+djangorestframework
+PyJWT
+django-cors-headers
+python-dotenv
+psycopg2-binary
