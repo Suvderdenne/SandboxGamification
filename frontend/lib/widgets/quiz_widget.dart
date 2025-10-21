@@ -1,83 +1,74 @@
+// lib/widgets/quiz_widget.dart
 import 'package:flutter/material.dart';
 import '../models/quiz_question.dart';
+import '../services/api_service.dart';
 
 class QuizWidget extends StatefulWidget {
-  final List<QuizQuestion> quiz;
+  final String jwtToken;
+  final int lessonId;
 
-  const QuizWidget({super.key, required this.quiz});
+  const QuizWidget({
+    super.key,
+    required this.jwtToken,
+    required this.lessonId,
+  });
 
   @override
   State<QuizWidget> createState() => _QuizWidgetState();
 }
 
 class _QuizWidgetState extends State<QuizWidget> {
-  final Map<int, int> _answers = {};
-  bool _submitted = false;
+  late Future<List<QuizQuestion>> quizFuture;
 
-  void _submit() {
-    setState(() {
-      _submitted = true;
-    });
-    int score = 0;
-    for (var i = 0; i < widget.quiz.length; i++) {
-      if (_answers[i] == widget.quiz[i].answer) score++;
-    }
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Quiz Result"),
-        content: Text("Score: $score / ${widget.quiz.length}"),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))
-        ],
-      ),
-    );
-  }
-
-  void _reset() {
-    setState(() {
-      _answers.clear();
-      _submitted = false;
-    });
+  @override
+  void initState() {
+    super.initState();
+    quizFuture = ApiService.fetchQuiz(widget.lessonId, widget.jwtToken);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.quiz.isEmpty) {
-      return const Text("No quiz available for this lesson.");
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Quiz", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 10),
-        for (var i = 0; i < widget.quiz.length; i++) ...[
-          Text("${i + 1}. ${widget.quiz[i].question}",
-              style: const TextStyle(fontWeight: FontWeight.w600)),
-          for (var j = 0; j < widget.quiz[i].options.length; j++)
-            RadioListTile<int>(
-              title: Text(widget.quiz[i].options[j]),
-              value: j,
-              groupValue: _answers[i],
-              onChanged: _submitted
-                  ? null
-                  : (v) => setState(() => _answers[i] = v!),
-              tileColor: _submitted
-                  ? (widget.quiz[i].answer == j
-                      ? Colors.green.withOpacity(0.1)
-                      : (_answers[i] == j ? Colors.red.withOpacity(0.1) : null))
-                  : null,
-            ),
-          const Divider(),
-        ],
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(onPressed: _submitted ? _reset : _submit, child: Text(_submitted ? "Reset" : "Submit")),
-          ],
-        )
-      ],
+    return FutureBuilder<List<QuizQuestion>>(
+      future: quizFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Text('No quiz available');
+        } else {
+          final quiz = snapshot.data!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: quiz.map((q) {
+              return Card(
+                margin: const EdgeInsets.all(8),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(q.question,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 8),
+                      ...q.options.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final option = entry.value;
+                        return ListTile(
+                          leading: const Icon(Icons.circle_outlined, size: 16),
+                          title: Text(option),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          );
+        }
+      },
     );
   }
 }

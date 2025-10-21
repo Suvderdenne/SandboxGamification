@@ -1,90 +1,42 @@
 import 'package:flutter/material.dart';
-import '../models/lesson.dart';
-import '../widgets/quiz_widget.dart';
-import '../widgets/theme_switch.dart';
+import '../models/topic.dart';
+import '../services/api_service.dart';
+import '../widgets/lesson_list.dart';
 
 class LessonPage extends StatefulWidget {
-  final List<Lesson> lessons;
-  final VoidCallback onToggleTheme;
-
-  const LessonPage({
-    super.key,
-    required this.lessons,
-    required this.onToggleTheme,
-  });
+  const LessonPage({super.key});
 
   @override
   State<LessonPage> createState() => _LessonPageState();
 }
 
 class _LessonPageState extends State<LessonPage> {
-  Lesson? selectedLesson;
+  late Future<List<Topic>> topicsFuture;
 
   @override
   void initState() {
     super.initState();
-    selectedLesson = widget.lessons.first;
+    topicsFuture = ApiService.fetchTopics();
   }
 
   @override
   Widget build(BuildContext context) {
-    final categories = widget.lessons.map((e) => e.category).toSet().toList();
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("W3School Clone (Flutter)"),
-        actions: [
-          ThemeSwitch(onToggleTheme: widget.onToggleTheme),
-        ],
+      appBar: AppBar(title: const Text("Topics")),
+      body: FutureBuilder<List<Topic>>(
+        future: topicsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No topics available'));
+          } else {
+            return LessonList(topics: snapshot.data!);
+          }
+        },
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text("Lessons", style: TextStyle(color: Colors.white)),
-            ),
-            for (var category in categories)
-              ExpansionTile(
-                title: Text(category),
-                children: [
-                  for (var lesson in widget.lessons
-                      .where((l) => l.category == category))
-                    ListTile(
-                      title: Text(lesson.title),
-                      onTap: () {
-                        setState(() => selectedLesson = lesson);
-                        Navigator.pop(context);
-                      },
-                    )
-                ],
-              ),
-          ],
-        ),
-      ),
-      body: selectedLesson == null
-          ? const Center(child: Text("Select a lesson"))
-          : Padding(
-              padding: const EdgeInsets.all(16),
-              child: ListView(
-                children: [
-                  Text(
-                    selectedLesson!.title,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    selectedLesson!.description,
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                  const Divider(),
-                  Text(selectedLesson!.content),
-                  const SizedBox(height: 24),
-                  QuizWidget(quiz: selectedLesson!.quiz),
-                ],
-              ),
-            ),
     );
   }
 }

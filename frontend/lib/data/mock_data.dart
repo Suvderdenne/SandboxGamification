@@ -1,78 +1,45 @@
+// lib/data/mock_data.dart
 import '../models/lesson.dart';
 import '../models/quiz_question.dart';
 
 final mockLessons = [
   Lesson(
-    id: "python-intro",
-    title: "Introduction to Python",
+    id: 1,
+    title: "Intro to Python",
+    description: "Learn basic syntax and data types in Python.",
     category: "Python Basics",
-    description: "Learn the basics of Python programming language.",
-    content: """
-Python is a popular programming language known for its simplicity and readability.
-You can use it for web development, data analysis, and much more.
-""",
     quiz: [
       QuizQuestion(
-        question: "What is the correct file extension for Python files?",
-        options: [".pyth", ".pt", ".pyt", ".py"],
-        answer: 3,
-      ),
-      QuizQuestion(
-        question: "How do you print something in Python?",
-        options: ["print()", "echo()", "say()", "printf()"],
+        id: 1,
+        question: "What is the output of print(2 + 3)?",
+        options: ["5", "23", "Error", "None"],
         answer: 0,
       ),
-    ],
-  ),
-  Lesson(
-    id: "python-variables",
-    title: "Python Variables",
-    category: "Python Basics",
-    description: "Learn how to declare and use variables in Python.",
-    content: """
-Variables in Python are created when you assign a value to them:
-
-x = 10
-name = "Alice"
-
-You don't need to declare variable types in Python.
-""",
-    quiz: [
       QuizQuestion(
-        question: "Which of the following is a valid variable name?",
-        options: ["2name", "my_name", "my-name", "class"],
+        id: 2,
+        question: "Which of these is a valid variable name?",
+        options: ["1var", "_var", "var!", "None"],
         answer: 1,
-      ),
-      QuizQuestion(
-        question: "Which keyword is used to declare a variable in Python?",
-        options: ["var", "let", "const", "None of the above"],
-        answer: 3,
       ),
     ],
   ),
   Lesson(
-    id: "python-zzzz",
-    title: "Python Variableszzzzz",
+    id: 2,
+    title: "Control Flow",
+    description: "If statements, loops, and more.",
     category: "Python Basics",
-    description: "Learn how to declare and use variables in Python.",
-    content: """
-Variables in Python are created when you assign a value to them:
-
-x = 10
-name = "Alice"
-
-You don't need to declare variable types in Python.
-""",
     quiz: [
       QuizQuestion(
-        question: "Which of the following is a valid variable name?",
-        options: ["2name", "my_name", "my-name", "class"],
+        id: 3,
+        question: "What keyword starts a loop?",
+        options: ["if", "while", "loop", "repeat"],
         answer: 1,
       ),
       QuizQuestion(
-        question: "Which keyword is used to declare a variable in Python?",
-        options: ["var", "let", "const", "None of the above"],
-        answer: 3,
+        id: 4,
+        question: "What does 'break' do?",
+        options: ["Exits loop", "Restarts loop", "Skips iteration", "None"],
+        answer: 0,
       ),
     ],
   ),

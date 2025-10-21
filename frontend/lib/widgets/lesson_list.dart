@@ -1,35 +1,28 @@
 import 'package:flutter/material.dart';
-import '../models/lesson.dart';
+import '../models/topic.dart';
 
 class LessonList extends StatelessWidget {
-  final List<Lesson> lessons;
-  final Function(Lesson) onSelect;
-
-  const LessonList({
-    super.key,
-    required this.lessons,
-    required this.onSelect,
-  });
+  final List<Topic> topics;
+  const LessonList({super.key, required this.topics});
 
   @override
   Widget build(BuildContext context) {
-    final categories = lessons.map((e) => e.category).toSet().toList();
-
-    return ListView(
-      children: [
-        for (var category in categories)
-          ExpansionTile(
-            title: Text(category),
-            children: [
-              for (var lesson
-                  in lessons.where((l) => l.category == category).toList())
-                ListTile(
-                  title: Text(lesson.title),
-                  onTap: () => onSelect(lesson),
-                ),
-            ],
+    return ListView.builder(
+      itemCount: topics.length,
+      itemBuilder: (context, index) {
+        final topic = topics[index];
+        return Card(
+          margin: const EdgeInsets.all(8),
+          child: ListTile(
+            title: Text(topic.title),
+            subtitle: Text(topic.description ?? "No description"),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () {
+              // Navigate to quiz page later
+            },
           ),
-      ],
+        );
+      },
     );
   }
 }
