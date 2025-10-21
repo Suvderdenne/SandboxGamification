@@ -14,7 +14,7 @@ from firstApp.models import User
 def quiz_progress_list(request):
     if request.method == "GET":
         progress = list(QuizProgress.objects.all().values())
-        return JsonResponse(progress, safe=False)
+        return JsonResponse({"status": 200, "data": progress})
     elif request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -63,6 +63,7 @@ def quiz_progress_detail(request, progress_id):
     
     if request.method == "GET":
         return JsonResponse({
+            "status": 200,
             "id": progress.id,
             "test_id": progress.test_id.id,
             "user_id": progress.user_id.id,
@@ -81,12 +82,12 @@ def quiz_progress_detail(request, progress_id):
             if 'achieved_score' in data:
                 progress.achieved_score = data['achieved_score']
             progress.save()
-            return JsonResponse({"message": "Прогрессийн бичлэг амжилттай шинэчлэгдлээ"})
+            return JsonResponse({"message": "Прогрессийн бичлэг амжилттай шинэчлэгдлээ", "status": 200})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
     elif request.method == "DELETE":
         progress.delete()
-        return JsonResponse({"message": "Прогрессийн бичлэг амжилттай устгагдлаа"})
+        return JsonResponse({"message": "Прогрессийн бичлэг амжилттай устгагдлаа", "status": 200})
 
 # ==========================
 # QuizDetail Views
@@ -96,7 +97,7 @@ def quiz_progress_detail(request, progress_id):
 def quiz_detail_list(request):
     if request.method == "GET":
         details = list(QuizDetail.objects.all().values())
-        return JsonResponse(details, safe=False)
+        return JsonResponse({"status": 200, "data": details})
     elif request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -144,6 +145,7 @@ def quiz_detail_detail(request, detail_id):
     
     if request.method == "GET":
         return JsonResponse({
+            "status": 200,
             "id": detail.id,
             "test_id": detail.test_id.id,
             "user_id": detail.user_id.id,
@@ -159,12 +161,12 @@ def quiz_detail_detail(request, detail_id):
             if 'option_id' in data:
                 detail.option_id = Option.objects.get(id=data['option_id'])
             detail.save()
-            return JsonResponse({"message": "Дэлгэрэнгүй бичлэг амжилттай шинэчлэгдлээ"})
+            return JsonResponse({"message": "Дэлгэрэнгүй бичлэг амжилттай шинэчлэгдлээ", "status": 200})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
     elif request.method == "DELETE":
         detail.delete()
-        return JsonResponse({"message": "Дэлгэрэнгүй бичлэг амжилттай устгагдлаа"})
+        return JsonResponse({"message": "Дэлгэрэнгүй бичлэг амжилттай устгагдлаа", "status": 200})
 
 # ==========================
 # UserScore Views
@@ -174,7 +176,7 @@ def quiz_detail_detail(request, detail_id):
 def user_score_list(request):
     if request.method == "GET":
         scores = list(UserScore.objects.all().values())
-        return JsonResponse(scores, safe=False)
+        return JsonResponse({"status": 200, "data": scores})
     elif request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -220,6 +222,7 @@ def user_score_detail(request, score_id):
     
     if request.method == "GET":
         return JsonResponse({
+            "status": 200,
             "id": score.id,
             "user_id": score.user_id.id,
             "quiz_progress_id": score.quiz_progress_id.id,
@@ -235,9 +238,9 @@ def user_score_detail(request, score_id):
             if 'total_score' in data:
                 score.total_score = data['total_score']
             score.save()
-            return JsonResponse({"message": "Онооны бичлэг амжилттай шинэчлэгдлээ"})
+            return JsonResponse({"message": "Онооны бичлэг амжилттай шинэчлэгдлээ", "status": 200})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
     elif request.method == "DELETE":
         score.delete()
-        return JsonResponse({"message": "Онооны бичлэг амжилттай устгагдлаа"})
+        return JsonResponse({"message": "Онооны бичлэг амжилттай устгагдлаа", "status": 200})

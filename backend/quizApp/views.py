@@ -10,7 +10,7 @@ from firstApp.decorators import jwt_required
 def topic_list(request):
     if request.method == "GET":
         topics = list(Topic.objects.all().values())
-        return JsonResponse(topics, safe=False)
+        return JsonResponse({"status": 200, "data": topics})
 
     elif request.method == "POST":
         try:
@@ -40,6 +40,7 @@ def topic_detail(request, topic_id):
 
     if request.method == "GET":
         return JsonResponse({
+            "status": 200,
             "id": topic.id,
             "title": topic.title,
             "description": topic.description,
@@ -53,13 +54,13 @@ def topic_detail(request, topic_id):
                 if key in data:
                     setattr(topic, key, data[key])
             topic.save()
-            return JsonResponse({"message": "Сэдэв амжилттай шинэчлэгдлээ"})
+            return JsonResponse({"message": "Сэдэв амжилттай шинэчлэгдлээ", "status": 200})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
     elif request.method == "DELETE":
         topic.delete()
-        return JsonResponse({"message": "Сэдэв амжилттай устгагдлаа"})
+        return JsonResponse({"message": "Сэдэв амжилттай устгагдлаа", "status": 200})
 
 
 @csrf_exempt
@@ -67,7 +68,7 @@ def topic_detail(request, topic_id):
 def quiz_list(request):
     if request.method == "GET":
         quizzes = list(Quiz.objects.all().values())
-        return JsonResponse(quizzes, safe=False)
+        return JsonResponse({"status": 200, "data": quizzes})
 
     elif request.method == "POST":
         try:
@@ -97,6 +98,7 @@ def quiz_detail(request, quiz_id):
 
     if request.method == "GET":
         return JsonResponse({
+            "status": 200,
             "id": quiz.id,
             "title": quiz.title,
             "description": quiz.description,
@@ -111,20 +113,20 @@ def quiz_detail(request, quiz_id):
                 if key in data:
                     setattr(quiz, key, data[key])
             quiz.save()
-            return JsonResponse({"message": "Тест амжилттай шинэчлэгдлээ"})
+            return JsonResponse({"message": "Тест амжилттай шинэчлэгдлээ", "status": 200})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
     elif request.method == "DELETE":
         quiz.delete()
-        return JsonResponse({"message": "Тест амжилттай устгагдлаа"})
+        return JsonResponse({"message": "Тест амжилттай устгагдлаа", "status": 200})
 
 @csrf_exempt
 @jwt_required
 def question_list(request):
     if request.method == "GET":
         questions = list(Question.objects.all().values())
-        return JsonResponse(questions, safe=False)
+        return JsonResponse({"status": 200, "data": questions})
     elif request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -144,6 +146,7 @@ def question_detail(request, question_id):
 
     if request.method == "GET":
         return JsonResponse({
+            "status": 200,
             "id": question.id,
             "quiz_id": question.quiz_id,
             "text": question.text,
@@ -158,13 +161,13 @@ def question_detail(request, question_id):
                 if key in data:
                     setattr(question, key, data[key])
             question.save()
-            return JsonResponse({"message": "Асуулт амжилттай шинэчлэгдлээ"})
+            return JsonResponse({"message": "Асуулт амжилттай шинэчлэгдлээ", "status": 200})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
     elif request.method == "DELETE":
         question.delete()
-        return JsonResponse({"message": "Асуулт амжилттай устгагдлаа"})
+        return JsonResponse({"message": "Асуулт амжилттай устгагдлаа", "status": 200})
 
 
 @csrf_exempt
@@ -172,7 +175,7 @@ def question_detail(request, question_id):
 def option_list(request):
     if request.method == "GET":
         options = list(Option.objects.all().values())
-        return JsonResponse(options, safe=False)
+        return JsonResponse({"status": 200, "data": options})
 
     elif request.method == "POST":
         try:
@@ -202,6 +205,7 @@ def option_detail(request, option_id):
 
     if request.method == "GET":
         return JsonResponse({
+            "status": 200,
             "id": option.id,
             "question_id": option.question_id,
             "text": option.text,
@@ -214,9 +218,9 @@ def option_detail(request, option_id):
                 if key in data:
                     setattr(option, key, data[key])
             option.save()
-            return JsonResponse({"message": "Сонголт амжилттай шинэчлэгдлээ"})
+            return JsonResponse({"message": "Сонголт амжилттай шинэчлэгдлээ", "status": 200})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
     elif request.method == "DELETE":
         option.delete()
-        return JsonResponse({"message": "Сонголт амжилттай устгагдлаа"})
+        return JsonResponse({"message": "Сонголт амжилттай устгагдлаа", "status": 200})
