@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/topic.dart';
 import '../models/quiz.dart';
-import '../models/question.dart';
 
 class ApiService {
   static const String baseUrl = "http://127.0.0.1:8000/api";
@@ -43,10 +42,7 @@ class ApiService {
         'X-CSRFToken': csrfToken!,
         'Cookie': 'csrftoken=$csrfToken',
       },
-      body: jsonEncode({
-        'username': username,
-        'password': password,
-      }),
+      body: jsonEncode({'username': username, 'password': password}),
     );
 
     print("🔵 Login response: ${response.statusCode}, body: ${response.body}");
@@ -105,7 +101,9 @@ class ApiService {
       headers: _authHeaders(),
     );
 
-    print("📦 Quizzes response: ${response.statusCode}, body: ${response.body}");
+    print(
+      "📦 Quizzes response: ${response.statusCode}, body: ${response.body}",
+    );
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
@@ -124,7 +122,9 @@ class ApiService {
       headers: _authHeaders(),
     );
 
-    print("📦 Questions response: ${response.statusCode}, body: ${response.body}");
+    print(
+      "📦 Questions response: ${response.statusCode}, body: ${response.body}",
+    );
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
@@ -136,7 +136,9 @@ class ApiService {
   }
 
   /// Create new quiz (POST)
-  static Future<List<Quiz>> createQuiz(List<Map<String, dynamic>> newQuizzes) async {
+  static Future<List<Quiz>> createQuiz(
+    List<Map<String, dynamic>> newQuizzes,
+  ) async {
     print("🟢 Creating quizzes...");
     final response = await http.post(
       Uri.parse('$baseUrl/quiz/quizzes/'),
@@ -144,7 +146,9 @@ class ApiService {
       body: jsonEncode(newQuizzes),
     );
 
-    print("📦 Create quiz response: ${response.statusCode}, body: ${response.body}");
+    print(
+      "📦 Create quiz response: ${response.statusCode}, body: ${response.body}",
+    );
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
@@ -152,6 +156,20 @@ class ApiService {
       return data.map((e) => Quiz.fromJson(e)).toList();
     } else {
       throw Exception('Failed to create quiz: ${response.body}');
+    }
+  }
+
+  /// quizs
+  static Future<Quiz> fetchQuiz(int id) async {
+    final response = await http.get( 
+    Uri.parse("$baseUrl/quiz/quizzes/$id"),
+    headers: _authHeaders());
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      return Quiz.fromJson(jsonData);
+    } else {
+      throw Exception("Failed to load quiz");
     }
   }
 }

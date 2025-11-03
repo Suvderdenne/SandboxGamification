@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/question.dart';
+import '../models/quiz.dart';
 import '../services/api_service.dart';
 
 class QuizPage extends StatefulWidget {
@@ -13,124 +13,132 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
-  List<Question> questions = [];
-  int currentIndex = 0;
-  int score = 0;
-  bool loading = true;
-  bool answered = false;
-  int? selectedAnswer;
+  Quiz? _quiz;
+  Map<int, int> _selectedAnswers = {}; // questionId -> optionId
+  bool _loading = true;
+  bool _submitted = false;
 
   @override
   void initState() {
     super.initState();
-    _loadQuestions();
+    _loadQuiz();
   }
 
-  Future<void> _loadQuestions() async {
+  Future<void> _loadQuiz() async {
     try {
-      final fetched = await ApiService.fetchQuestions(widget.quizId);
+      final quiz = await ApiService.fetchQuiz(widget.quizId);
       setState(() {
-        questions = fetched;
-        loading = false;
+        _quiz = quiz;
+        _loading = false;
       });
     } catch (e) {
-      print("❌ Failed to load questions: $e");
-      setState(() => loading = false);
+      print("❌ Error fetching quiz: $e");
+      setState(() => _loading = false);
     }
   }
 
-  void _submitAnswer(int choiceIndex) {
-    final correctIndex = questions[currentIndex].correctAnswerIndex;
-    if (choiceIndex == correctIndex) score++;
-
+  void _selectAnswer(int questionId, int optionId) {
     setState(() {
-      answered = true;
-      selectedAnswer = choiceIndex;
-    });
-
-    Future.delayed(const Duration(seconds: 1), () {
-      if (currentIndex < questions.length - 1) {
-        setState(() {
-          currentIndex++;
-          answered = false;
-          selectedAnswer = null;
-        });
-      } else {
-        _showResultDialog();
-      }
+      _selectedAnswers[questionId] = optionId;
     });
   }
 
-  void _showResultDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Quiz Complete!'),
-        content: Text('Your score: $score / ${questions.length}'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // close dialog
-              Navigator.pop(context); // back to quiz list
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+  int _calculateScore() {
+    int score = 0;
+    for (var question in _quiz!.questions) {
+      final selectedId = _selectedAnswers[question.id];
+      final correctOption = question.options.firstWhere((o) => o.isCorrect);
+      if (selectedId == correctOption.id) score++;
+    }
+    return score;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    if (questions.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(title: Text(widget.quizTitle)),
-        body: const Center(child: Text("No questions found.")),
+    if (_loading) {
+      return const Scaffold(
+        appBar: null,
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    final question = questions[currentIndex];
+    if (_quiz == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.quizTitle)),
+        body: const Center(child: Text("Failed to load quiz.")),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: Text(widget.quizTitle)),
+      appBar: AppBar(title: Text(_quiz!.title)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text(
-              "Question ${currentIndex + 1}/${questions.length}",
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            if (_quiz!.description != null && _quiz!.description!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Text(_quiz!.description!, style: const TextStyle(fontSize: 16)),
+              ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _quiz!.questions.length,
+                itemBuilder: (context, index) {
+                  final question = _quiz!.questions[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("${index + 1}. ${question.text}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          Column(
+                            children: question.options.map((option) {
+                              final selected = _selectedAnswers[question.id] == option.id;
+                              final correct = _submitted && option.isCorrect;
+                              final wrong = _submitted && selected && !option.isCorrect;
+
+                              Color? bgColor;
+                              if (correct) bgColor = Colors.green[300];
+                              if (wrong) bgColor = Colors.red[300];
+
+                              return Container(
+                                margin: const EdgeInsets.symmetric(vertical: 4),
+                                color: bgColor,
+                                child: ListTile(
+                                  title: Text(option.text),
+                                  leading: Radio<int>(
+                                    value: option.id,
+                                    groupValue: _selectedAnswers[question.id],
+                                    onChanged: _submitted ? null : (val) => _selectAnswer(question.id, val!),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(question.text, style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 20),
-            ...List.generate(question.choices.length, (i) {
-              final choice = question.choices[i];
-              final isCorrect = i == question.correctAnswerIndex;
-              final isSelected = i == selectedAnswer;
-              Color color = Colors.grey.shade200;
-
-              if (answered && isSelected) {
-                color = isCorrect ? Colors.green.shade300 : Colors.red.shade300;
-              }
-
-              return GestureDetector(
-                onTap: answered ? null : () => _submitAnswer(i),
-                child: Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade400),
-                  ),
-                  child: Text(choice, style: const TextStyle(fontSize: 16)),
-                ),
-              );
-            }),
+            ElevatedButton(
+              onPressed: _submitted
+                  ? null
+                  : () {
+                      setState(() {
+                        _submitted = true;
+                      });
+                      final score = _calculateScore();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Таны оноо: $score/${_quiz!.questions.length}")),
+                      );
+                    },
+              child: const Text("Submit"),
+            ),
           ],
         ),
       ),

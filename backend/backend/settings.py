@@ -143,5 +143,5 @@ JWT_EXP_HOURS = 24
 
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = ["http://localhost:8080"]
-CSRF_TRUSTED_ORIGINS = ["http://localhost:8080"]
+CORS_ALLOWED_ORIGINS = ["http://localhost:8080","http://127.0.0.1:8000"]
+CSRF_TRUSTED_ORIGINS = ["http://localhost:8080","http://127.0.0.1:8000"]
