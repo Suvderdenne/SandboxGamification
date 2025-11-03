@@ -162,7 +162,7 @@ class ApiService {
   /// quizs
   static Future<Quiz> fetchQuiz(int id) async {
     final response = await http.get( 
-    Uri.parse("$baseUrl/quiz/quizzes/$id"),
+    Uri.parse("$baseUrl/quiz/quizzes/$id/"),
     headers: _authHeaders());
 
     if (response.statusCode == 200) {
