@@ -1,42 +1,73 @@
 import 'package:flutter/material.dart';
-import '../models/topic.dart';
+import '../models/quiz.dart';
 import '../services/api_service.dart';
-import '../widgets/lesson_list.dart';
+import 'quiz_page.dart';
 
 class LessonPage extends StatefulWidget {
-  const LessonPage({super.key});
+  final int topicId;
+  final String topicTitle;
+
+  const LessonPage({super.key, required this.topicId, required this.topicTitle});
 
   @override
   State<LessonPage> createState() => _LessonPageState();
 }
 
 class _LessonPageState extends State<LessonPage> {
-  late Future<List<Topic>> topicsFuture;
+  List<Quiz> _quizzes = [];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    topicsFuture = ApiService.fetchTopics();
+    _loadQuizzes();
+  }
+
+  Future<void> _loadQuizzes() async {
+    try {
+      final all = await ApiService.fetchQuizzes();
+      setState(() {
+        _quizzes = all.where((q) => q.topicId == widget.topicId).toList();
+        _loading = false;
+      });
+    } catch (e) {
+      print("❌ Error loading quizzes: $e");
+      setState(() => _loading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Topics")),
-      body: FutureBuilder<List<Topic>>(
-        future: topicsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No topics available'));
-          } else {
-            return LessonList(topics: snapshot.data!);
-          }
-        },
-      ),
+      appBar: AppBar(title: Text(widget.topicTitle)),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _quizzes.isEmpty
+              ? const Center(child: Text("No quizzes available"))
+              : ListView.builder(
+                  itemCount: _quizzes.length,
+                  itemBuilder: (context, index) {
+                    final quiz = _quizzes[index];
+                    return Card(
+                      child: ListTile(
+                        title: Text(quiz.title),
+                        subtitle: Text(quiz.description ?? ""),
+                        trailing: const Icon(Icons.arrow_forward_ios),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => QuizPage(
+                                quizId: quiz.id,
+                                quizTitle: quiz.title,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }
