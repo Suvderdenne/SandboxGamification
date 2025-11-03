@@ -97,14 +97,34 @@ def quiz_detail(request, quiz_id):
         return JsonResponse({"error": "Тест олдсонгүй"}, status=404)
 
     if request.method == "GET":
+        # 1. Quiz-ийн бүх асуултуудыг шүүх
+        questions = Question.objects.filter(quiz_id=quiz.id)
+
+        # 2. Асуулт бүрийн options-уудыг цуглуулах
+        question_list = []
+        for q in questions:
+            options = Option.objects.filter(question_id=q.id).values(
+                "id", "text", "is_correct"
+            )
+
+            question_list.append({
+                "id": q.id,
+                "text": q.text,
+                "difficulty_level": q.difficulty_level,
+                "order": q.order,
+                "options": list(options)
+            })
+
+        # 3. Quiz-ийн бүх мэдээллийг буцаах
         return JsonResponse({
             "status": 200,
             "id": quiz.id,
             "title": quiz.title,
             "description": quiz.description,
             "topic_id": quiz.topic_id,
-            "order": quiz.order
-        })
+            "order": quiz.order,
+            "questions": question_list
+        }, status=200)
 
     elif request.method == "PUT":
         try:
@@ -120,6 +140,7 @@ def quiz_detail(request, quiz_id):
     elif request.method == "DELETE":
         quiz.delete()
         return JsonResponse({"message": "Тест амжилттай устгагдлаа", "status": 200})
+
 
 @csrf_exempt
 @jwt_required
@@ -149,6 +170,8 @@ def question_detail(request, question_id):
             "status": 200,
             "id": question.id,
             "quiz_id": question.quiz_id,
+            "questions": [
+            ],
             "text": question.text,
             "difficulty_level": question.difficulty_level,
             "order": question.order
