@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import 'lesson_page.dart';
+import 'topics_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,70 +10,63 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  final usernameController = TextEditingController();
-  final passwordController = TextEditingController();
-  bool loading = false;
-  String? errorMsg;
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _loading = false;
 
   Future<void> _login() async {
-    setState(() {
-      loading = true;
-      errorMsg = null;
-    });
+    setState(() => _loading = true);
+    final username = _usernameController.text;
+    final password = _passwordController.text;
 
-    final success = await ApiService.login(
-      usernameController.text.trim(),
-      passwordController.text.trim(),
-    );
-
-    setState(() => loading = false);
-
-    if (success) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LessonPage()),
+    try {
+      final success = await ApiService.login(username, password);
+      if (success) {
+        // Navigate to TopicsPage after successful login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const TopicsPage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Нэвтрэхэд алдаа гарлаа")),
+        );
+      }
+    } catch (e) {
+      print("❌ Login error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Нэвтрэхэд алдаа гарлаа")),
       );
-    } else {
-      setState(() {
-        errorMsg = "Нэвтрэхэд алдаа гарлаа. Хэрэглэгчийн нэр эсвэл нууц үг буруу байна.";
-      });
+    } finally {
+      setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Нэвтрэх")),
+      appBar: AppBar(title: const Text("Login Page")),
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextFormField(
-                controller: usernameController,
-                decoration: const InputDecoration(labelText: "Нэр"),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: passwordController,
-                decoration: const InputDecoration(labelText: "Нууц үг"),
-                obscureText: true,
-              ),
-              const SizedBox(height: 24),
-              if (errorMsg != null)
-                Text(errorMsg!, style: const TextStyle(color: Colors.red)),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: loading ? null : _login,
-                child: loading
-                    ? const CircularProgressIndicator()
-                    : const Text("Нэвтрэх"),
-              ),
-            ],
-          ),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _usernameController,
+              decoration: const InputDecoration(labelText: "Username"),
+            ),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: "Password"),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loading ? null : _login,
+              child: _loading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("Login"),
+            ),
+          ],
         ),
       ),
     );

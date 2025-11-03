@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: django_backend
     command: python manage.py runserver 0.0.0.0:8000
+    restart: unless-stopped
     volumes:
       - ./backend:/app
     ports:
@@ -22,6 +23,8 @@ services:
       dockerfile: Dockerfile
     container_name: flutter_frontend
     command: flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0
+    stdin_open: true
+    tty: true
     volumes:
       - ./frontend:/app
     ports:
