@@ -1,4 +1,5 @@
-import 'dart:convert';
+// lib/services/api_service.dart
+import 'dart:convert' as json;
 import 'package:http/http.dart' as http;
 import '../models/topic.dart';
 import '../models/quiz.dart';
@@ -8,60 +9,170 @@ class ApiService {
 
   static String? csrfToken;
   static String? jwtToken;
+  static int? userId;
 
-  // -----------------------------
-  //  AUTH SECTION
-  // -----------------------------
-
-  /// Step 1: Get CSRF token
+  // ========================
+  // CSRF TOKEN
+  // ========================
   static Future<void> getCsrfToken() async {
     print("🟡 Getting CSRF token...");
-    final response = await http.get(Uri.parse('$baseUrl/get_csrf/'));
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/get_csrf/'));
+      print("CSRF response: ${response.statusCode}");
 
-    print("CSRF response: ${response.statusCode}, body: ${response.body}");
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      csrfToken = data['csrfToken'];
-      print("✅ CSRF token = $csrfToken");
-    } else {
-      throw Exception("Failed to get CSRF token: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        final data = json.jsonDecode(response.body);
+        csrfToken = data['csrfToken'];
+        print("✅ CSRF token acquired");
+      } else {
+        throw Exception("Failed to get CSRF token");
+      }
+    } catch (e) {
+      print("❌ CSRF error: $e");
+      rethrow;
     }
   }
 
-  /// Step 2: Login and get user token
+  // ========================
+  // REGISTRATION
+  // ========================
+    static Future<bool> register(
+      String username,
+      String email,
+      String password,
+    ) async {
+      print("🟡 Registering user...");
+      try {
+        if (csrfToken == null) await getCsrfToken();
+
+        final response = await http.post(
+          Uri.parse('$baseUrl/register/'),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken!,
+          },
+          body: json.jsonEncode({
+            'username': username,
+            'email': email,  
+            'password': password,
+          }),
+        );
+
+        print("Register response: ${response.statusCode}");
+
+        if (response.statusCode == 201) {
+          print("✅ Registration successful");
+          return true;
+        } else {
+          print("❌ Registration failed: ${response.body}");
+          return false;
+        }
+      } catch (e) {
+        print("❌ Register error: $e");
+        return false;
+      }
+    }
+
+
+  // ========================
+  // LOGIN
+  // ========================
   static Future<bool> login(String username, String password) async {
-    if (csrfToken == null) await getCsrfToken();
+    print("🟡 Logging in...");
+    try {
+      if (csrfToken == null) await getCsrfToken();
 
-    print("🟡 Logging in with username=$username, csrfToken=$csrfToken");
+      final response = await http.post(
+        Uri.parse('$baseUrl/login/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken!,
+          'Cookie': 'csrftoken=$csrfToken',
+        },
+        body: json.jsonEncode({
+          'username': username,
+          'password': password,
+        }),
+      );
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/login/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken!,
-        'Cookie': 'csrftoken=$csrfToken',
-      },
-      body: jsonEncode({'username': username, 'password': password}),
-    );
+      print("Login response: ${response.statusCode}");
 
-    print("🔵 Login response: ${response.statusCode}, body: ${response.body}");
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      jwtToken = data['token'];
-      print("✅ Logged in successfully, token = $jwtToken");
-      return jwtToken != null;
-    } else {
-      print("❌ Login failed: ${response.body}");
+      if (response.statusCode == 200) {
+        final data = json.jsonDecode(response.body);
+        jwtToken = data['token'];
+        userId = data['user_id'];
+        print("✅ Logged in successfully");
+        return true;
+      } else {
+        print("❌ Login failed: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("❌ Login error: $e");
       return false;
     }
   }
 
-  // Helper to build headers for authenticated requests
+  // ========================
+  // LOGOUT
+  // ========================
+  static Future<bool> logout() async {
+    print("🟡 Logging out...");
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/logout/'),
+        headers: _authHeaders(),
+      );
+
+      print("Logout response: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        jwtToken = null;
+        csrfToken = null;
+        userId = null;
+        print("✅ Logged out successfully");
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print("❌ Logout error: $e");
+      return false;
+    }
+  }
+
+  // ========================
+  // PROFILE
+  // ========================
+  static Future<Map<String, dynamic>?> getProfile() async {
+    print("🟡 Fetching profile...");
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/profile/'),
+        headers: _authHeaders(),
+      );
+
+      print("Profile response: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        final data = json.jsonDecode(response.body);
+        userId = data["id"];
+        return data;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("❌ Profile error: $e");
+      return null;
+    }
+  }
+
+  // ========================
+  // AUTH HEADERS
+  // ========================
   static Map<String, String> _authHeaders() {
     if (jwtToken == null || csrfToken == null) {
-      throw Exception("Not authenticated — login required");
+      throw Exception("Not authenticated");
     }
     return {
       'Authorization': 'Bearer $jwtToken',
@@ -70,106 +181,220 @@ class ApiService {
     };
   }
 
-  // -----------------------------
-  //  DATA FETCHING SECTION
-  // -----------------------------
-
-  /// Fetch Topics
+  // ========================
+  // TOPICS
+  // ========================
   static Future<List<Topic>> fetchTopics() async {
     print("🟡 Fetching topics...");
-    final response = await http.get(
-      Uri.parse('$baseUrl/quiz/topics/'),
-      headers: _authHeaders(),
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/quiz/topics/'),
+        headers: _authHeaders(),
+      );
 
-    print("📦 Topics response: ${response.statusCode}, body: ${response.body}");
+      print("Topics response: ${response.statusCode}");
 
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-      final List<dynamic> data = decoded['data']; // ✅ Corrected structure
-      return data.map((e) => Topic.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to fetch topics: ${response.body}');
+      if (response.statusCode == 200) {
+        final decoded = json.jsonDecode(response.body);
+        final List<dynamic> data = decoded['data'];
+        return data.map((e) => Topic.fromJson(e)).toList();
+      } else {
+        throw Exception('Failed to fetch topics');
+      }
+    } catch (e) {
+      print("❌ Topics error: $e");
+      rethrow;
     }
   }
 
-  /// Fetch Quizzes
+  // ========================
+  // QUIZZES
+  // ========================
   static Future<List<Quiz>> fetchQuizzes() async {
     print("🟡 Fetching quizzes...");
-    final response = await http.get(
-      Uri.parse('$baseUrl/quiz/quizzes/'),
-      headers: _authHeaders(),
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/quiz/quizzes/'),
+        headers: _authHeaders(),
+      );
 
-    print(
-      "📦 Quizzes response: ${response.statusCode}, body: ${response.body}",
-    );
+      print("Quizzes response: ${response.statusCode}");
 
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-      final List<dynamic> data = decoded['data']; // ✅ Handle wrapped response
-      return data.map((e) => Quiz.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to fetch quizzes: ${response.body}');
+      if (response.statusCode == 200) {
+        final decoded = json.jsonDecode(response.body);
+        final List<dynamic> data = decoded['data'];
+        return data.map((e) => Quiz.fromJson(e)).toList();
+      } else {
+        throw Exception('Failed to fetch quizzes');
+      }
+    } catch (e) {
+      print("❌ Quizzes error: $e");
+      rethrow;
     }
   }
 
-  /// Fetch Questions for a quiz
-  static Future<List<Question>> fetchQuestions(int quizId) async {
-    print("🟡 Fetching questions for quiz $quizId...");
-    final response = await http.get(
-      Uri.parse('$baseUrl/quiz/questions/?quiz=$quizId'),
-      headers: _authHeaders(),
-    );
-
-    print(
-      "📦 Questions response: ${response.statusCode}, body: ${response.body}",
-    );
-
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-      final List<dynamic> data = decoded['data']; // ✅ Adjusted for wrapped API
-      return data.map((e) => Question.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to fetch questions: ${response.body}');
-    }
-  }
-
-  /// Create new quiz (POST)
-  static Future<List<Quiz>> createQuiz(
-    List<Map<String, dynamic>> newQuizzes,
-  ) async {
-    print("🟢 Creating quizzes...");
-    final response = await http.post(
-      Uri.parse('$baseUrl/quiz/quizzes/'),
-      headers: _authHeaders(),
-      body: jsonEncode(newQuizzes),
-    );
-
-    print(
-      "📦 Create quiz response: ${response.statusCode}, body: ${response.body}",
-    );
-
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-      final List<dynamic> data = decoded['data'];
-      return data.map((e) => Quiz.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to create quiz: ${response.body}');
-    }
-  }
-
-  /// quizs
+  // ========================
+  // QUIZ DETAIL
+  // ========================
   static Future<Quiz> fetchQuiz(int id) async {
-    final response = await http.get( 
-    Uri.parse("$baseUrl/quiz/quizzes/$id/"),
-    headers: _authHeaders());
+    print("🟡 Fetching quiz $id...");
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/quiz/quizzes/$id/"),
+        headers: _authHeaders(),
+      );
 
-    if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body);
-      return Quiz.fromJson(jsonData);
-    } else {
-      throw Exception("Failed to load quiz");
+      print("Quiz response: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        final jsonData = json.jsonDecode(response.body);
+        return Quiz.fromJson(jsonData);
+      } else {
+        throw Exception("Failed to load quiz");
+      }
+    } catch (e) {
+      print("❌ Quiz error: $e");
+      rethrow;
+    }
+  }
+
+  // ========================
+  // QUIZ PROGRESS
+  // ========================
+  static Future<bool> submitQuizProgress({
+    required int quizId,
+    required int userId,
+    required double requiredScore,
+    required double achievedScore,
+  }) async {
+    print("🟡 Submitting quiz progress...");
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/test/progress/'),
+        headers: _authHeaders(),
+        body: json.jsonEncode({
+          'test_id': quizId,
+          'user_id': userId,
+          'required_score': requiredScore,
+          'achieved_score': achievedScore,
+        }),
+      );
+
+      print("Progress response: ${response.statusCode}");
+
+      if (response.statusCode == 201) {
+        print("✅ Progress saved");
+        return true;
+      } else {
+        print("❌ Failed to save progress: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("❌ Progress error: $e");
+      return false;
+    }
+  }
+
+  // ========================
+  // QUIZ DETAILS (Answers)
+  // ========================
+  static Future<bool> submitQuizDetails({
+    required int quizId,
+    required int userId,
+    required List<int> selectedOptions,
+  }) async {
+    print("🟡 Submitting quiz details...");
+    try {
+      final List<Map<String, dynamic>> details = selectedOptions
+          .map((optionId) => {
+                'test_id': quizId,
+                'user_id': userId,
+                'option_id': optionId,
+              })
+          .toList();
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/test/details/'),
+        headers: _authHeaders(),
+        body: json.jsonEncode(details),
+      );
+
+      print("Details response: ${response.statusCode}");
+
+      if (response.statusCode == 201) {
+        print("✅ Quiz details saved");
+        return true;
+      } else {
+        print("❌ Failed to save details: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("❌ Details error: $e");
+      return false;
+    }
+  }
+
+  // ========================
+  // USER SCORES
+  // ========================
+  static Future<bool> submitUserScore({
+    required int userId,
+    required int quizProgressId,
+    required double totalScore,
+  }) async {
+    print("🟡 Submitting user score...");
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/test/scores/'),
+        headers: _authHeaders(),
+        body: json.jsonEncode({
+          'user_id': userId,
+          'quiz_progress_id': quizProgressId,
+          'total_score': totalScore,
+        }),
+      );
+
+      print("Score response: ${response.statusCode}");
+
+      if (response.statusCode == 201) {
+        print("✅ Score saved");
+        return true;
+      } else {
+        print("❌ Failed to save score: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("❌ Score error: $e");
+      return false;
+    }
+  }
+
+  // ========================
+  // FETCH USER SCORES
+  // ========================
+  static Future<List<Map<String, dynamic>>> fetchUserScores(int userId) async {
+    print("🟡 Fetching user scores...");
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/test/scores/'),
+        headers: _authHeaders(),
+      );
+
+      print("User scores response: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        final decoded = json.jsonDecode(response.body);
+        final List<dynamic> data = decoded['data'];
+        return data
+            .cast<Map<String, dynamic>>()
+            .where((score) => score['user_id'] == userId)
+            .toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print("❌ User scores error: $e");
+      return [];
     }
   }
 }

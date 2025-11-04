@@ -97,10 +97,8 @@ def quiz_detail(request, quiz_id):
         return JsonResponse({"error": "Тест олдсонгүй"}, status=404)
 
     if request.method == "GET":
-        # 1. Quiz-ийн бүх асуултуудыг шүүх
         questions = Question.objects.filter(quiz_id=quiz.id)
 
-        # 2. Асуулт бүрийн options-уудыг цуглуулах
         question_list = []
         for q in questions:
             options = Option.objects.filter(question_id=q.id).values(
@@ -115,7 +113,6 @@ def quiz_detail(request, quiz_id):
                 "options": list(options)
             })
 
-        # 3. Quiz-ийн бүх мэдээллийг буцаах
         return JsonResponse({
             "status": 200,
             "id": quiz.id,

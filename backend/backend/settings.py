@@ -142,6 +142,27 @@ JWT_EXP_HOURS = 24
 
 
 
+CORS_ALLOW_CREDENTIALS = True# settings.py дээр
+CORS_ALLOW_ALL_ORIGINS = True  # Development үед л
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = ["http://localhost:8080","http://127.0.0.1:8000"]
-CSRF_TRUSTED_ORIGINS = ["http://localhost:8080","http://127.0.0.1:8000"]
+CORS_ALLOWED_ORIGINS = ["http://localhost:8080","http://127.0.0.1:8000", "http://127.0.0.1:61340"]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8000", 
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:61340", 
+    "http://localhost:61151/",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]

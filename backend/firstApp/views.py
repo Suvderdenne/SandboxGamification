@@ -1,22 +1,27 @@
+# D:/01. Projects/Sandbox_Club/SandboxGamification/backend/firstApp/views.py
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.middleware.csrf import get_token
 from datetime import datetime, timezone
 import json
 
+
 from .models import User
 from .utils import create_token, decode_token, blacklist_token_by_jti
 from .decorators import jwt_required
+
 
 
 @ensure_csrf_cookie
 def get_csrf(request):
     """CSRF токен авах"""
     token = get_token(request)
+    print(token)
     return JsonResponse({
         "csrfToken": token,
         "message": "CSRF токен амжилттай илгээгдлээ"
     }, status=200)
+
 
 
 @csrf_exempt
@@ -34,10 +39,10 @@ def register(request):
         return JsonResponse({"error": "JSON формат буруу байна"}, status=400)
 
     username = data.get("username")
-    gmail = data.get("gmail")
+    email = data.get("email")  # ✅ 'gmail' → 'email'
     password = data.get("password")
 
-    if not username or not password or not gmail:
+    if not username or not password or not email:
         return JsonResponse(
             {"error": "Хэрэглэгчийн нэр, и-мэйл, нууц үг шаардлагатай"},
             status=400
@@ -49,7 +54,7 @@ def register(request):
             status=400
         )
 
-    user = User(username=username, gmail=gmail)
+    user = User(username=username, email=email)  # ✅ gmail → email
     user.set_password(password)
     user.save()
 
@@ -57,6 +62,7 @@ def register(request):
         {"message": "Бүртгэл амжилттай хийгдлээ"},
         status=201
     )
+
 
 
 @csrf_exempt
@@ -93,8 +99,10 @@ def login(request):
     token = create_token(user.id)
     return JsonResponse({
         "message": "Амжилттай нэвтэрлээ",
-        "token": token
+        "token": token,
+        "user_id": user.id  # ✅ user_id буцаах
     }, status=200)
+
 
 
 @jwt_required
@@ -102,10 +110,12 @@ def profile(request):
     """Хэрэглэгчийн профайл мэдээлэл"""
     user = request.user
     return JsonResponse({
+        "id": user.id,  # ✅ id нэмэх
         "username": user.username,
-        "gmail": user.gmail,
+        "email": user.email,  # ✅ gmail → email
         "message": "Хэрэглэгчийн мэдээлэл амжилттай уншигдлаа"
     }, status=200)
+
 
 
 @csrf_exempt
