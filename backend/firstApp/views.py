@@ -5,11 +5,9 @@ from django.middleware.csrf import get_token
 from datetime import datetime, timezone
 import json
 
-
 from .models import User
 from .utils import create_token, decode_token, blacklist_token_by_jti
 from .decorators import jwt_required
-
 
 
 @ensure_csrf_cookie
@@ -39,7 +37,7 @@ def register(request):
         return JsonResponse({"error": "JSON формат буруу байна"}, status=400)
 
     username = data.get("username")
-    email = data.get("email")  # ✅ 'gmail' → 'email'
+    email = data.get("email")
     password = data.get("password")
 
     if not username or not password or not email:
@@ -54,7 +52,7 @@ def register(request):
             status=400
         )
 
-    user = User(username=username, email=email)  # ✅ gmail → email
+    user = User(username=username, email=email, verified='N')  # ✅ gmail → email
     user.set_password(password)
     user.save()
 
@@ -81,6 +79,7 @@ def login(request):
 
     username = data.get("username")
     password = data.get("password")
+    verified = data.get("verified")
 
     if not username or not password:
         return JsonResponse(
@@ -90,11 +89,15 @@ def login(request):
 
     try:
         user = User.objects.get(username=username)
+
     except User.DoesNotExist:
         return JsonResponse({"error": "Нэвтрэх мэдээлэл буруу байна"}, status=400)
 
     if not user.check_password(password):
-        return JsonResponse({"error": "Нэвтрэх мэдээлэл буруу байна"}, status=400)
+        return JsonResponse({"error": "Нууц үг таарахгүй байна"}, status=400)
+    
+    if user.check_verified(verified):
+        return JsonResponse({"error": "Баталгаажуулаагүй байна"}, status=400)
 
     token = create_token(user.id)
     return JsonResponse({

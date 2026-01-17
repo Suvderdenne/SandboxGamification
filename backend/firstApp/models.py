@@ -6,12 +6,16 @@ class User(models.Model):
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(default="example@gmail.com")
     password = models.CharField(max_length=255)
+    verified = models.CharField(default="N", max_length=1)
 
     def set_password(self, raw_password):
         self.password = make_password(raw_password)
 
     def check_password(self, raw_password):
         return check_password(raw_password, self.password)
+    
+    def check_verified(self, verified):
+        return verified == 'Y'
 
     def __str__(self):
         return self.username
