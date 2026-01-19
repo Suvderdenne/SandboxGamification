@@ -1,6 +1,8 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
-import 'pages/login_page.dart';  // ✅ Import шалгах
+import 'pages/login_page.dart';
+import 'pages/topics_page.dart';
+import 'pages/profile_page.dart';
+import 'utils/constants.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,13 +16,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Sandbox Quiz',
+      
+      // 🎨 Theme тохиргоо
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366F1),
-          brightness: Brightness.light,
+          seedColor: AppColors.primary,
         ),
-        cardTheme: CardThemeData(  // ✅ CardTheme → CardThemeData
+        cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -35,21 +38,15 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366F1),
-          brightness: Brightness.dark,
-        ),
-        cardTheme: CardThemeData(  // ✅ CardTheme → CardThemeData
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-      ),
-      themeMode: ThemeMode.system,
-      home: const LoginPage(),  // ✅ LoginPage класс байх ёстой
+      
+      // 🗺️ Routes тохиргоо
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const LoginPage(),
+        '/topics': (context) => const TopicsPage(),
+        '/profile': (context) => const ProfilePage(),
+        // Дараагийн хуудсуудыг энд нэмнэ
+      },
     );
   }
 }

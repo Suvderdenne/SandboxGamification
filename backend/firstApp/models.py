@@ -19,6 +19,9 @@ class User(models.Model):
 
     def __str__(self):
         return self.username
+    
+    class Meta:
+        db_table = "User"
 
 class BlacklistedToken(models.Model):
     jti = models.CharField(max_length=255, unique=True)  # token-ийн unique id
@@ -27,3 +30,5 @@ class BlacklistedToken(models.Model):
 
     def __str__(self):
         return f"{self.jti} (expires {self.expires_at})"
+    class Meta:
+        db_table = "BlackListedToken"

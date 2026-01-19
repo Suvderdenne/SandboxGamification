@@ -15,20 +15,16 @@ class ApiService {
   // CSRF TOKEN
   // ========================
   static Future<void> getCsrfToken() async {
-    print("🟡 Getting CSRF token...");
     try {
       final response = await http.get(Uri.parse('$baseUrl/get_csrf/'));
-      print("CSRF response: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final data = json.jsonDecode(response.body);
         csrfToken = data['csrfToken'];
-        print("✅ CSRF token acquired");
       } else {
         throw Exception("Failed to get CSRF token");
       }
     } catch (e) {
-      print("❌ CSRF error: $e");
       rethrow;
     }
   }
@@ -41,7 +37,6 @@ class ApiService {
       String email,
       String password,
     ) async {
-      print("🟡 Registering user...");
       try {
         if (csrfToken == null) await getCsrfToken();
 
@@ -58,17 +53,13 @@ class ApiService {
           }),
         );
 
-        print("Register response: ${response.statusCode}");
 
         if (response.statusCode == 201) {
-          print("✅ Registration successful");
           return true;
         } else {
-          print("❌ Registration failed: ${response.body}");
           return false;
         }
       } catch (e) {
-        print("❌ Register error: $e");
         return false;
       }
     }
@@ -78,7 +69,6 @@ class ApiService {
   // LOGIN
   // ========================
   static Future<bool> login(String username, String password) async {
-    print("🟡 Logging in...");
     try {
       if (csrfToken == null) await getCsrfToken();
 
@@ -95,20 +85,15 @@ class ApiService {
         }),
       );
 
-      print("Login response: ${response.statusCode}");
-
       if (response.statusCode == 200) {
         final data = json.jsonDecode(response.body);
         jwtToken = data['token'];
         userId = data['user_id'];
-        print("✅ Logged in successfully");
         return true;
       } else {
-        print("❌ Login failed: ${response.body}");
         return false;
       }
     } catch (e) {
-      print("❌ Login error: $e");
       return false;
     }
   }
@@ -117,26 +102,21 @@ class ApiService {
   // LOGOUT
   // ========================
   static Future<bool> logout() async {
-    print("🟡 Logging out...");
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/logout/'),
         headers: _authHeaders(),
       );
 
-      print("Logout response: ${response.statusCode}");
-
       if (response.statusCode == 200) {
         jwtToken = null;
         csrfToken = null;
         userId = null;
-        print("✅ Logged out successfully");
         return true;
       } else {
         return false;
       }
     } catch (e) {
-      print("❌ Logout error: $e");
       return false;
     }
   }
@@ -145,14 +125,11 @@ class ApiService {
   // PROFILE
   // ========================
   static Future<Map<String, dynamic>?> getProfile() async {
-    print("🟡 Fetching profile...");
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/profile/'),
         headers: _authHeaders(),
       );
-
-      print("Profile response: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final data = json.jsonDecode(response.body);
@@ -162,7 +139,6 @@ class ApiService {
         return null;
       }
     } catch (e) {
-      print("❌ Profile error: $e");
       return null;
     }
   }

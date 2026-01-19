@@ -10,6 +10,7 @@ class Topic(models.Model):
     
     class Meta:
         db_table = "Topic"
+        ordering = ["order"]
 
 class Quiz(models.Model):
     topic = models.ForeignKey(Topic, related_name="quizzes", on_delete=models.CASCADE)
@@ -22,6 +23,7 @@ class Quiz(models.Model):
     
     class Meta:
         db_table = "Quiz"
+        ordering = ["order"]
 
 class Question(models.Model):
     quiz = models.ForeignKey(Quiz, related_name="questions", on_delete=models.CASCADE)

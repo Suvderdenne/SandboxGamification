@@ -52,7 +52,7 @@ def register(request):
             status=400
         )
 
-    user = User(username=username, email=email, verified='N')  # ✅ gmail → email
+    user = User(username=username, email=email, verified='N')  
     user.set_password(password)
     user.save()
 

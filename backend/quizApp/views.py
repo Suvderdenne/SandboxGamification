@@ -9,7 +9,7 @@ from firstApp.decorators import jwt_required
 @jwt_required
 def topic_list(request):
     if request.method == "GET":
-        topics = list(Topic.objects.all().values())
+        topics = list(Topic.objects.all().values().order_by("order", "id"))
         return JsonResponse({"status": 200, "data": topics})
 
     elif request.method == "POST":
@@ -67,7 +67,7 @@ def topic_detail(request, topic_id):
 @jwt_required
 def quiz_list(request):
     if request.method == "GET":
-        quizzes = list(Quiz.objects.all().values())
+        quizzes = list(Quiz.objects.all().values().order_by('order', 'id'))
         return JsonResponse({"status": 200, "data": quizzes})
 
     elif request.method == "POST":
@@ -98,7 +98,6 @@ def quiz_detail(request, quiz_id):
 
     if request.method == "GET":
         questions = Question.objects.filter(quiz_id=quiz.id)
-
         question_list = []
         for q in questions:
             options = Option.objects.filter(question_id=q.id).values(
@@ -113,6 +112,19 @@ def quiz_detail(request, quiz_id):
                 "options": list(options)
             })
 
+        print("\n ---- start\n")
+        print("question_list: ")
+        print(question_list)
+        print({
+            "status": 200,
+            "id": quiz.id,
+            "title": quiz.title,
+            "description": quiz.description,
+            "topic_id": quiz.topic_id,
+            "order": quiz.order,
+            "questions": question_list
+        })
+        print("\n ---- eend\n\n")
         return JsonResponse({
             "status": 200,
             "id": quiz.id,
