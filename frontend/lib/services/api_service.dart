@@ -5,7 +5,7 @@ import '../models/topic.dart';
 import '../models/quiz.dart';
 
 class ApiService {
-  static const String baseUrl = "http://127.0.0.1:8000/api";
+  static const String baseUrl = "https://sandboxgameficationbackend-production.up.railway.app/api";
 
   static String? csrfToken;
   static String? jwtToken;
