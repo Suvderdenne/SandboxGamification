@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 import '../services/api_service.dart';
+import '../services/theme_service.dart';
+import 'theme_switch.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -25,6 +27,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       automaticallyImplyLeading: showBackButton,
       actions: [
+        ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeMode,
+          builder: (context, mode, child) {
+            return ThemeSwitch(
+              themeMode: mode,
+              onThemeChanged: ThemeService.setThemeMode,
+            );
+          },
+        ),
         if (actions != null) ...actions!,
         if (showLogout)
           IconButton(

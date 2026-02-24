@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../layouts/main_layout.dart';
 import '../services/api_service.dart';
+import '../services/theme_service.dart';
 import '../utils/constants.dart';
 import '../models/user.dart';
 
@@ -15,46 +16,61 @@ class _ProfilePageState extends State<ProfilePage> {
   UserProfile? _profile;
   bool _loading = true;
   
-  // Stats (дараа нь testApp-с татна)
-  int _totalQuizzes = 0;
-  int _completedQuizzes = 0;
+  // Stats
+  int _totalQuizzesCount = 0;
+  int _completedQuizzesCount = 0;
   double _averageScore = 0.0;
-  // int _totalPoints = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadProfile();
-    _loadStats();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _loading = true);
+    await Future.wait([
+      _loadProfile(),
+      _loadStats(),
+    ]);
+    if (mounted) {
+      setState(() => _loading = false);
+    }
   }
 
   Future<void> _loadProfile() async {
     try {
       final data = await ApiService.getProfile();
-      if (data != null && mounted) {
-        setState(() {
-          _profile = UserProfile.fromJson(data);
-          _loading = false;
-        });
+      if (data != null) {
+        _profile = UserProfile.fromJson(data);
       }
     } catch (e) {
       print("❌ Profile load error: $e");
-      if (mounted) {
-        setState(() => _loading = false);
-      }
     }
   }
 
   Future<void> _loadStats() async {
     try {
-      // Хийх зүйл: : testApp-с статистик татах API дуудах
-      // Одоогоор хардкод өгөгдөл
-      setState(() {
-        _totalQuizzes = 15;
-        _completedQuizzes = 8;
-        _averageScore = 78.5;
-        // _totalPoints = 1250;
-      });
+      if (ApiService.userId != null) {
+        final scores = await ApiService.fetchUserScores(ApiService.userId!);
+        final allQuizzes = await ApiService.fetchQuizzes();
+        
+        if (mounted) {
+          setState(() {
+            _totalQuizzesCount = allQuizzes.length;
+            _completedQuizzesCount = scores.length;
+            if (scores.isNotEmpty) {
+              double sum = 0;
+              for (var score in scores) {
+                sum += (score['total_score'] as num).toDouble();
+              }
+              _averageScore = sum / scores.length;
+            } else {
+              _averageScore = 0.0;
+            }
+          });
+        }
+      }
     } catch (e) {
       print("❌ Stats load error: $e");
     }
@@ -184,7 +200,7 @@ class _ProfilePageState extends State<ProfilePage> {
           child: _StatCard(
             icon: Icons.quiz,
             title: 'Нийт тест',
-            value: '$_completedQuizzes / $_totalQuizzes',
+            value: '$_completedQuizzesCount / $_totalQuizzesCount',
             color: AppColors.primary,
           ),
         ),
@@ -292,15 +308,20 @@ class _ProfilePageState extends State<ProfilePage> {
             },
           ),
           const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.dark_mode),
-            title: const Text('Харанхуй горим'),
-            trailing: Switch(
-              value: false,
-              onChanged: (value) {
-                // Хийх зүйл: : Toggle dark mode
-              },
-            ),
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: ThemeService.themeMode,
+            builder: (context, mode, child) {
+              return ListTile(
+                leading: Icon(mode == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode),
+                title: const Text('Харанхуй горим'),
+                trailing: Switch(
+                  value: mode == ThemeMode.dark,
+                  onChanged: (value) {
+                    ThemeService.toggleTheme(value);
+                  },
+                ),
+              );
+            },
           ),
           const Divider(height: 1),
           ListTile(

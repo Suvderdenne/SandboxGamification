@@ -72,6 +72,23 @@ class CustomDrawer extends StatelessWidget {
           ),
           const Divider(),
           ListTile(
+            leading: const Icon(Icons.admin_panel_settings, color: AppColors.primary),
+            title: const Text('Админ самбар'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/admin');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.assignment_ind, color: AppColors.secondary),
+            title: const Text('Багшийн самбар'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/teacher');
+            },
+          ),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('Тохиргоо'),
             onTap: () {

@@ -5,7 +5,7 @@ import '../models/topic.dart';
 import '../models/quiz.dart';
 
 class ApiService {
-  static const String baseUrl = "https://sandboxgameficationbackend-production.up.railway.app/api";
+  static const String baseUrl = "http://localhost:8000/api";
 
   static String? csrfToken;
   static String? jwtToken;
@@ -306,6 +306,170 @@ class ApiService {
       }
     } catch (e) {
       print("❌ Details error: $e");
+      return false;
+    }
+  }
+
+  // ========================
+  // TOPICS CRUD
+  // ========================
+  static Future<bool> createTopic(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/quiz/topics/'),
+        headers: _authHeaders(),
+        body: json.jsonEncode(data),
+      );
+      return response.statusCode == 201;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> updateTopic(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/quiz/topics/$id/'),
+        headers: _authHeaders(),
+        body: json.jsonEncode(data),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> deleteTopic(int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/quiz/topics/$id/'),
+        headers: _authHeaders(),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ========================
+  // QUIZZES CRUD
+  // ========================
+  static Future<bool> createQuiz(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/quiz/quizzes/'),
+        headers: _authHeaders(),
+        body: json.jsonEncode(data),
+      );
+      return response.statusCode == 201;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> updateQuiz(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/quiz/quizzes/$id/'),
+        headers: _authHeaders(),
+        body: json.jsonEncode(data),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> deleteQuiz(int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/quiz/quizzes/$id/'),
+        headers: _authHeaders(),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ========================
+  // QUESTIONS CRUD
+  // ========================
+  static Future<bool> createQuestion(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/quiz/questions/'),
+        headers: _authHeaders(),
+        body: json.jsonEncode(data),
+      );
+      return response.statusCode == 201;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> updateQuestion(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/quiz/questions/$id/'),
+        headers: _authHeaders(),
+        body: json.jsonEncode(data),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> deleteQuestion(int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/quiz/questions/$id/'),
+        headers: _authHeaders(),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ========================
+  // OPTIONS CRUD
+  // ========================
+  static Future<bool> createOption(dynamic data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/quiz/options/'),
+        headers: _authHeaders(),
+        body: json.jsonEncode(data),
+      );
+      return response.statusCode == 201;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> updateOption(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/quiz/options/$id/'),
+        headers: _authHeaders(),
+        body: json.jsonEncode(data),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> deleteOption(int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/quiz/options/$id/'),
+        headers: _authHeaders(),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
       return false;
     }
   }
