@@ -1,3 +1,5 @@
+// layouts/empty_layout.dart
+
 import 'package:flutter/material.dart';
 
 class EmptyLayout extends StatelessWidget {

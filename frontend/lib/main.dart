@@ -1,3 +1,5 @@
+// main.dart
+
 import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
 import 'pages/topics_page.dart';

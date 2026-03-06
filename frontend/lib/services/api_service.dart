@@ -5,7 +5,8 @@ import '../models/topic.dart';
 import '../models/quiz.dart';
 
 class ApiService {
-  static const String baseUrl = "http://localhost:8000/api";
+  static const String baseUrl = "http://127.0.0.1:8000/api";
+  // static const String baseUrl = "https://mandakhcmsbackend-production.up.railway.app/api";
 
   static String? csrfToken;
   static String? jwtToken;
@@ -17,18 +18,16 @@ class ApiService {
   static Future<void> getCsrfToken() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/get_csrf/'));
-
       if (response.statusCode == 200) {
         final data = json.jsonDecode(response.body);
         csrfToken = data['csrfToken'];
       } else {
-        throw Exception("Failed to get CSRF token");
+        throw Exception("Failed to get CSRF token: ${response.statusCode}");
       }
     } catch (e) {
       rethrow;
     }
   }
-
   // ========================
   // REGISTRATION
   // ========================
