@@ -1,3 +1,5 @@
+// pages/profile_page.dart
+
 import 'package:flutter/material.dart';
 import '../layouts/main_layout.dart';
 import '../services/api_service.dart';
@@ -45,7 +47,6 @@ class _ProfilePageState extends State<ProfilePage> {
         _profile = UserProfile.fromJson(data);
       }
     } catch (e) {
-      print("❌ Profile load error: $e");
     }
   }
 
@@ -72,7 +73,6 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       }
     } catch (e) {
-      print("❌ Stats load error: $e");
     }
   }
 

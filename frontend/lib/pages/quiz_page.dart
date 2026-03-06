@@ -56,15 +56,11 @@ class _QuizPageState extends State<QuizPage> with SingleTickerProviderStateMixin
   Future<void> _loadQuiz() async {
     try {
       final quiz = await ApiService.fetchQuiz(widget.quizId);
-      print("**** quiz data: ");
-      print(quiz);
-      print("**** end quiz data ****\n\n");
       setState(() {
         _quiz = quiz;
         _loading = false;
       });
     } catch (e) {
-      print("❌ Error fetching quiz: $e");
       setState(() => _loading = false);
     }
   }
@@ -126,7 +122,6 @@ class _QuizPageState extends State<QuizPage> with SingleTickerProviderStateMixin
         _showResultDialog(score, totalQuestions, percentage);
       }
     } catch (e) {
-      print("❌ Error submitting quiz: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -128,7 +128,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
-print("hello world")
 
 # settings.py (онцгойлох хэсэг)
 # INSTALLED_APPS += ['users']

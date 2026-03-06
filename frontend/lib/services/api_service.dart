@@ -135,10 +135,6 @@ class ApiService {
   // AUTH HEADERS
   // ========================
   static Map<String, String> _authHeaders() {
-    print("_authHeaders function");
-    print('csrfToken: $csrfToken');
-    print('jwtToken: $jwtToken');
-    print("_authHeaders function");
     if (jwtToken == null || csrfToken == null) {
       throw Exception("Not authenticated");
     }
@@ -311,18 +307,11 @@ class ApiService {
   // ========================
   static Future<bool> createTopic(Map<String, dynamic> data) async {
     try {
-      print("createTopic");
-      print('-url: $baseUrl/quiz/topics/'); 
-      print("_authHeaders()"); 
-      print(_authHeaders()); 
-      print("_authHeaders()"); 
       final response = await http.post(
         Uri.parse('$baseUrl/quiz/topics/'),
         headers: _authHeaders(),
         body: json.jsonEncode(data),
       );
-      print("this line"); 
-      print('-url: $baseUrl/quiz/topics/'); 
       return response.statusCode == 201;
     } catch (e) {
       return false;

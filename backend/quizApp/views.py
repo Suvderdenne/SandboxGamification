@@ -112,19 +112,6 @@ def quiz_detail(request, quiz_id):
                 "options": list(options)
             })
 
-        print("\n ---- start\n")
-        print("question_list: ")
-        print(question_list)
-        print({
-            "status": 200,
-            "id": quiz.id,
-            "title": quiz.title,
-            "description": quiz.description,
-            "topic_id": quiz.topic_id,
-            "order": quiz.order,
-            "questions": question_list
-        })
-        print("\n ---- eend\n\n")
         return JsonResponse({
             "status": 200,
             "id": quiz.id,
