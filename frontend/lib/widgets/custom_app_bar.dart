@@ -1,3 +1,5 @@
+// widgets/custom_app_bar.dart
+
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 import '../services/api_service.dart';
@@ -9,6 +11,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final bool showBackButton;
   final bool showLogout;
+  final bool showAdmin;
 
   const CustomAppBar({
     super.key,
@@ -16,6 +19,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.showBackButton = false,
     this.showLogout = true,
+    this.showAdmin = true,
   });
 
   @override
@@ -37,6 +41,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           },
         ),
         if (actions != null) ...actions!,
+        if (showAdmin)
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings_outlined),
+            tooltip: 'Админ самбар',
+            onPressed: () => Navigator.pushNamed(context, '/admin'),
+          ),
         if (showLogout)
           IconButton(
             icon: const Icon(Icons.logout),
@@ -60,9 +70,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Гарах'),
           ),
         ],

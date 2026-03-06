@@ -28,41 +28,34 @@ class ApiService {
       rethrow;
     }
   }
+
   // ========================
   // REGISTRATION
   // ========================
-    static Future<bool> register(
-      String username,
-      String email,
-      String password,
-    ) async {
-      try {
-        if (csrfToken == null) await getCsrfToken();
-
-        final response = await http.post(
-          Uri.parse('$baseUrl/register/'),
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken!,
-          },
-          body: json.jsonEncode({
-            'username': username,
-            'email': email,  
-            'password': password,
-          }),
-        );
-
-
-        if (response.statusCode == 201) {
-          return true;
-        } else {
-          return false;
-        }
-      } catch (e) {
-        return false;
-      }
+  static Future<bool> register(
+    String username,
+    String email,
+    String password,
+  ) async {
+    try {
+      if (csrfToken == null) await getCsrfToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/register/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken!,
+        },
+        body: json.jsonEncode({
+          'username': username,
+          'email': email,
+          'password': password,
+        }),
+      );
+      return response.statusCode == 201;
+    } catch (e) {
+      return false;
     }
-
+  }
 
   // ========================
   // LOGIN
@@ -70,7 +63,6 @@ class ApiService {
   static Future<bool> login(String username, String password) async {
     try {
       if (csrfToken == null) await getCsrfToken();
-
       final response = await http.post(
         Uri.parse('$baseUrl/login/'),
         headers: {
@@ -83,7 +75,6 @@ class ApiService {
           'password': password,
         }),
       );
-
       if (response.statusCode == 200) {
         final data = json.jsonDecode(response.body);
         jwtToken = data['token'];
@@ -106,7 +97,6 @@ class ApiService {
         Uri.parse('$baseUrl/logout/'),
         headers: _authHeaders(),
       );
-
       if (response.statusCode == 200) {
         jwtToken = null;
         csrfToken = null;
@@ -129,7 +119,6 @@ class ApiService {
         Uri.parse('$baseUrl/profile/'),
         headers: _authHeaders(),
       );
-
       if (response.statusCode == 200) {
         final data = json.jsonDecode(response.body);
         userId = data["id"];
@@ -146,6 +135,10 @@ class ApiService {
   // AUTH HEADERS
   // ========================
   static Map<String, String> _authHeaders() {
+    print("_authHeaders function");
+    print('csrfToken: $csrfToken');
+    print('jwtToken: $jwtToken');
+    print("_authHeaders function");
     if (jwtToken == null || csrfToken == null) {
       throw Exception("Not authenticated");
     }
@@ -160,15 +153,11 @@ class ApiService {
   // TOPICS
   // ========================
   static Future<List<Topic>> fetchTopics() async {
-    print("🟡 Fetching topics...");
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/quiz/topics/'),
         headers: _authHeaders(),
       );
-
-      print("Topics response: ${response.statusCode}");
-
       if (response.statusCode == 200) {
         final decoded = json.jsonDecode(response.body);
         final List<dynamic> data = decoded['data'];
@@ -177,7 +166,6 @@ class ApiService {
         throw Exception('Failed to fetch topics');
       }
     } catch (e) {
-      print("❌ Topics error: $e");
       rethrow;
     }
   }
@@ -186,15 +174,11 @@ class ApiService {
   // QUIZZES
   // ========================
   static Future<List<Quiz>> fetchQuizzes() async {
-    print("🟡 Fetching quizzes...");
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/quiz/quizzes/'),
         headers: _authHeaders(),
       );
-
-      print("Quizzes response: ${response.statusCode}");
-
       if (response.statusCode == 200) {
         final decoded = json.jsonDecode(response.body);
         final List<dynamic> data = decoded['data'];
@@ -203,7 +187,6 @@ class ApiService {
         throw Exception('Failed to fetch quizzes');
       }
     } catch (e) {
-      print("❌ Quizzes error: $e");
       rethrow;
     }
   }
@@ -212,15 +195,11 @@ class ApiService {
   // QUIZ DETAIL
   // ========================
   static Future<Quiz> fetchQuiz(int id) async {
-    print("🟡 Fetching quiz $id...");
     try {
       final response = await http.get(
         Uri.parse("$baseUrl/quiz/quizzes/$id/"),
         headers: _authHeaders(),
       );
-
-      print("Quiz response: ${response.statusCode}");
-
       if (response.statusCode == 200) {
         final jsonData = json.jsonDecode(response.body);
         return Quiz.fromJson(jsonData);
@@ -228,8 +207,49 @@ class ApiService {
         throw Exception("Failed to load quiz");
       }
     } catch (e) {
-      print("❌ Quiz error: $e");
       rethrow;
+    }
+  }
+
+  // ========================
+  // ALL QUESTIONS (flat list)
+  // ========================
+  static Future<List<Map<String, dynamic>>> fetchAllQuestions() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/quiz/questions/'),
+        headers: _authHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final decoded = json.jsonDecode(response.body);
+        final List<dynamic> data = decoded['data'];
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // ========================
+  // ALL OPTIONS (flat list)
+  // ========================
+  static Future<List<Map<String, dynamic>>> fetchAllOptions() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/quiz/options/'),
+        headers: _authHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final decoded = json.jsonDecode(response.body);
+        final List<dynamic> data = decoded['data'];
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
     }
   }
 
@@ -242,7 +262,6 @@ class ApiService {
     required double requiredScore,
     required double achievedScore,
   }) async {
-    print("🟡 Submitting quiz progress...");
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/test/progress/'),
@@ -254,18 +273,8 @@ class ApiService {
           'achieved_score': achievedScore,
         }),
       );
-
-      print("Progress response: ${response.statusCode}");
-
-      if (response.statusCode == 201) {
-        print("✅ Progress saved");
-        return true;
-      } else {
-        print("❌ Failed to save progress: ${response.body}");
-        return false;
-      }
+      return response.statusCode == 201;
     } catch (e) {
-      print("❌ Progress error: $e");
       return false;
     }
   }
@@ -278,7 +287,6 @@ class ApiService {
     required int userId,
     required List<int> selectedOptions,
   }) async {
-    print("🟡 Submitting quiz details...");
     try {
       final List<Map<String, dynamic>> details = selectedOptions
           .map((optionId) => {
@@ -287,24 +295,13 @@ class ApiService {
                 'option_id': optionId,
               })
           .toList();
-
       final response = await http.post(
         Uri.parse('$baseUrl/test/details/'),
         headers: _authHeaders(),
         body: json.jsonEncode(details),
       );
-
-      print("Details response: ${response.statusCode}");
-
-      if (response.statusCode == 201) {
-        print("✅ Quiz details saved");
-        return true;
-      } else {
-        print("❌ Failed to save details: ${response.body}");
-        return false;
-      }
+      return response.statusCode == 201;
     } catch (e) {
-      print("❌ Details error: $e");
       return false;
     }
   }
@@ -314,11 +311,18 @@ class ApiService {
   // ========================
   static Future<bool> createTopic(Map<String, dynamic> data) async {
     try {
+      print("createTopic");
+      print('-url: $baseUrl/quiz/topics/'); 
+      print("_authHeaders()"); 
+      print(_authHeaders()); 
+      print("_authHeaders()"); 
       final response = await http.post(
         Uri.parse('$baseUrl/quiz/topics/'),
         headers: _authHeaders(),
         body: json.jsonEncode(data),
       );
+      print("this line"); 
+      print('-url: $baseUrl/quiz/topics/'); 
       return response.statusCode == 201;
     } catch (e) {
       return false;
@@ -481,7 +485,6 @@ class ApiService {
     required int quizProgressId,
     required double totalScore,
   }) async {
-    print("🟡 Submitting user score...");
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/test/scores/'),
@@ -492,18 +495,8 @@ class ApiService {
           'total_score': totalScore,
         }),
       );
-
-      print("Score response: ${response.statusCode}");
-
-      if (response.statusCode == 201) {
-        print("✅ Score saved");
-        return true;
-      } else {
-        print("❌ Failed to save score: ${response.body}");
-        return false;
-      }
+      return response.statusCode == 201;
     } catch (e) {
-      print("❌ Score error: $e");
       return false;
     }
   }
@@ -512,15 +505,11 @@ class ApiService {
   // FETCH USER SCORES
   // ========================
   static Future<List<Map<String, dynamic>>> fetchUserScores(int userId) async {
-    print("🟡 Fetching user scores...");
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/test/scores/'),
         headers: _authHeaders(),
       );
-
-      print("User scores response: ${response.statusCode}");
-
       if (response.statusCode == 200) {
         final decoded = json.jsonDecode(response.body);
         final List<dynamic> data = decoded['data'];
@@ -532,7 +521,6 @@ class ApiService {
         return [];
       }
     } catch (e) {
-      print("❌ User scores error: $e");
       return [];
     }
   }

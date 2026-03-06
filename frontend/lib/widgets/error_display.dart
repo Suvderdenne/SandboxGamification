@@ -1,3 +1,5 @@
+// widgets/error_display.dart
+
 import 'package:flutter/material.dart';
 
 class ErrorDisplay extends StatelessWidget {

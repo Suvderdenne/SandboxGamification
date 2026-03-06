@@ -1,3 +1,5 @@
+// widgets/empty_display.dart
+
 import 'package:flutter/material.dart';
 
 class EmptyDisplay extends StatelessWidget {

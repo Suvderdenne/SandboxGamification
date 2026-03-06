@@ -1,4 +1,4 @@
-// pages/quiz_management_page.dart
+// pages/register_page.dart
 
 import 'package:flutter/material.dart';
 import '../layouts/empty_layout.dart';
