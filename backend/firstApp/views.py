@@ -14,7 +14,6 @@ from .decorators import jwt_required
 def get_csrf(request):
     """CSRF токен авах"""
     token = get_token(request)
-    print(token)
     return JsonResponse({
         "csrfToken": token,
         "message": "CSRF токен амжилттай илгээгдлээ"
