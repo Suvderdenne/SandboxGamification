@@ -295,7 +295,7 @@ class _AdminPageState extends State<AdminPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
     _loadData();
   }
 
@@ -347,6 +347,7 @@ class _AdminPageState extends State<AdminPage>
                       Tab(icon: Icon(Icons.quiz_outlined, size: 20), text: 'Тест', iconMargin: EdgeInsets.only(bottom: 2)),
                       Tab(icon: Icon(Icons.help_outline, size: 20), text: 'Асуулт', iconMargin: EdgeInsets.only(bottom: 2)),
                       Tab(icon: Icon(Icons.checklist_outlined, size: 20), text: 'Сонголт', iconMargin: EdgeInsets.only(bottom: 2)),
+                      Tab(icon: Icon(Icons.person_outline, size: 20), text: 'Профайл', iconMargin: EdgeInsets.only(bottom: 2)),
                       Tab(icon: Icon(Icons.menu_book_outlined, size: 20), text: 'Хичээл', iconMargin: EdgeInsets.only(bottom: 2)),
                     ],
                   ),
@@ -368,6 +369,7 @@ class _AdminPageState extends State<AdminPage>
                           topics: _topics,
                           quizzes: _quizzes,
                           onRefresh: _loadData),
+                      _ProfileTab(),
                       _LessonTab(
                           topics: _topics,
                           quizzes: _quizzes,
@@ -1045,6 +1047,8 @@ class _QuestionTabState extends State<_QuestionTab> {
         final quiz = widget.quizzes.firstWhere((qz) => qz.id == q.quizId,
             orElse: () => Quiz(
                 id: 0, title: '—', topicId: 0, order: 0, questions: []));
+        final topic = widget.topics.firstWhere((t) => t.id == quiz.topicId,
+            orElse: () => Topic(id: 0, title: '—', order: 0));
         return ListTile(
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
@@ -1066,7 +1070,7 @@ class _QuestionTabState extends State<_QuestionTab> {
             _diffChip(q.difficultyLevel),
             const SizedBox(width: 8),
             Flexible(
-              child: Text(quiz.title,
+              child: Text("${topic.title} > ${quiz.title}",
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                       fontSize: 11, color: Colors.grey[600])),
@@ -1440,6 +1444,11 @@ class _OptionTabState extends State<_OptionTab> {
             (q) => q.id == o.questionId,
             orElse: () =>
                 AdminQuestion(id: 0, quizId: 0, text: '—', difficultyLevel: 50, order: 0));
+        final quiz = widget.quizzes.firstWhere((qz) => qz.id == question.quizId,
+            orElse: () => Quiz(id: 0, title: '—', topicId: 0, order: 0, questions: []));
+        final topic = widget.topics.firstWhere((t) => t.id == quiz.topicId,
+            orElse: () => Topic(id: 0, title: '—', order: 0));
+            
         return ListTile(
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -1461,7 +1470,7 @@ class _OptionTabState extends State<_OptionTab> {
           title: Text(o.text,
               style: const TextStyle(
                   fontWeight: FontWeight.w600, fontSize: 14)),
-          subtitle: Text(question.text,
+          subtitle: Text("[${topic.title} > ${quiz.title}] ${question.text}",
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 11, color: Colors.grey[600])),
@@ -1869,7 +1878,155 @@ Widget _emptyState(IconData icon, String msg) => Center(
     );
 
 // ═══════════════════════════════════════════════════════════════════
-// LESSON TAB  — Topic-уудыг хичээлийн картаар харуулж CRUD хийнэ
+// USER TAB
+// ═══════════════════════════════════════════════════════════════════
+
+class _ProfileTab extends StatefulWidget {
+  @override
+  State<_ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<_ProfileTab> {
+  List<Map<String, dynamic>> _users = [];
+  bool _loading = true;
+  String _search = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    final data = await ApiService.fetchUsers();
+    if (mounted) {
+      setState(() {
+        _users = data;
+        _loading = false;
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> get _filtered => _search.isEmpty
+      ? _users
+      : _users
+          .where((u) => u['username']
+              .toString()
+              .toLowerCase()
+              .contains(_search.toLowerCase()))
+          .toList();
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    return Column(children: [_actionBar(), Expanded(child: _list())]);
+  }
+
+  Widget _actionBar() => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: Row(children: [
+          Expanded(
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Хэрэглэгч хайх...',
+                prefixIcon: const Icon(Icons.search, size: 18),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                isDense: true,
+              ),
+              onChanged: (v) => setState(() => _search = v),
+            ),
+          ),
+          const SizedBox(width: 10),
+          IconButton(
+            onPressed: _load,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Шинэчлэх',
+          ),
+        ]),
+      );
+
+  Widget _list() {
+    final items = _filtered;
+    if (items.isEmpty)
+      return _emptyState(Icons.people_outline, 'Хэрэглэгч олдсонгүй');
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
+      itemCount: items.length,
+      separatorBuilder: (_, __) =>
+          const Divider(height: 1, indent: 56, endIndent: 0),
+      itemBuilder: (ctx, i) {
+        final u = items[i];
+        final id = u['id'];
+        final username = u['username'];
+        final email = u['email'];
+        final verified = u['verified'] == 'Y';
+
+        return ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          leading: CircleAvatar(
+            backgroundColor: AppColors.primary.withOpacity(0.1),
+            child: Text(username[0].toUpperCase(),
+                style: const TextStyle(color: AppColors.primary)),
+          ),
+          title: Text(username,
+              style: const TextStyle(fontWeight: FontWeight.w600)),
+          subtitle: Text(email, style: const TextStyle(fontSize: 12)),
+          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+            if (verified)
+              const Icon(Icons.verified, color: AppColors.success, size: 16),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, size: 20),
+              itemBuilder: (_) => [
+                _menuItem('edit', Icons.edit_outlined, 'Нэр солих', Colors.blue),
+              ],
+              onSelected: (v) {
+                if (v == 'edit') _openEditForm(ctx, id, username);
+              },
+            ),
+          ]),
+          onTap: () => _openEditForm(ctx, id, username),
+        );
+      },
+    );
+  }
+
+  void _openEditForm(BuildContext ctx, int id, String currentUsername) {
+    final nameC = TextEditingController(text: currentUsername);
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (bsCtx) => _FormSheet(
+        title: 'Хэрэглэгчийн нэр солих',
+        onSave: () async {
+          final ok = await ApiService.updateUsername(id, nameC.text.trim());
+          if (ok) {
+            _load();
+            if (bsCtx.mounted) Navigator.pop(bsCtx);
+          } else {
+            if (bsCtx.mounted) {
+              ScaffoldMessenger.of(bsCtx).showSnackBar(
+                const SnackBar(content: Text('Нэр солиход алдаа гарлаа')),
+              );
+            }
+          }
+        },
+        fields: [
+          _FF(controller: nameC, label: 'Шинэ нэр *', hint: 'Хэрэглэгчийн нэр'),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LESSON TAB
+// — Topic-уудыг хичээлийн картаар харуулж CRUD хийнэ
 // ═══════════════════════════════════════════════════════════════════
 
 // Хичээлийн лого өнгийг topic.id-оор тодорхойлно

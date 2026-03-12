@@ -6,6 +6,8 @@ from .models import QuizProgress, QuizDetail, UserScore
 from quizApp.models import Quiz, Option
 from firstApp.models import User
 
+from django.db.models import Sum, Count, Min, Max
+
 # ==========================
 # QuizProgress Views
 # ==========================
@@ -18,40 +20,85 @@ def quiz_progress_list(request):
     elif request.method == "POST":
         try:
             data = json.loads(request.body)
-            if isinstance(data, list):
-                objs = []
-                for item in data:
-                    quiz = Quiz.objects.get(id=item['test_id'])
-                    user = User.objects.get(id=item['user_id'])
-                    objs.append(QuizProgress(
-                        test_id=quiz,
-                        user_id=user,
-                        required_score=item['required_score'],
-                        achieved_score=item['achieved_score']
-                    ))
-                QuizProgress.objects.bulk_create(objs)
-                return JsonResponse({"message": f"{len(objs)} прогрессийн бичлэг амжилттай үүсгэгдлээ"}, status=201)
-            elif isinstance(data, dict):
+            if isinstance(data, dict):
                 quiz = Quiz.objects.get(id=data['test_id'])
                 user = User.objects.get(id=data['user_id'])
-                progress = QuizProgress.objects.create(
-                    test_id=quiz,
-                    user_id=user,
-                    required_score=data['required_score'],
-                    achieved_score=data['achieved_score']
-                )
+                achieved_score = data['achieved_score']
+                completion_time = data.get('completion_time', 0)
+                
+                # Шалгалт өгсөн эсэхийг шалгах
+                existing_progress = QuizProgress.objects.filter(test_id=quiz, user_id=user).first()
+                
+                if existing_progress:
+                    # Хэрэв өмнөх оноо нь бага эсвэл ижил байвал шинэчилнэ (хамгийн богино хугацааг хадгална)
+                    if achieved_score >= float(existing_progress.achieved_score):
+                        # Хэрэв оноо ижил байвал хугацааг хамгийн богиноор солино
+                        if achieved_score == float(existing_progress.achieved_score):
+                            if completion_time < existing_progress.completion_time:
+                                existing_progress.completion_time = completion_time
+                        else:
+                            # Оноо их байвал шууд шинэчилнэ
+                            existing_progress.achieved_score = achieved_score
+                            existing_progress.completion_time = completion_time
+                        
+                        existing_progress.save()
+                        progress = existing_progress
+                        message = "Прогрессийн бичлэг амжилттай шинэчлэгдлээ"
+                        status_code = 200
+                    else:
+                        progress = existing_progress
+                        message = "Өмнөх онооноос бага байгаа тул шинэчлээгүй"
+                        status_code = 200
+                else:
+                    progress = QuizProgress.objects.create(
+                        test_id=quiz,
+                        user_id=user,
+                        required_score=data['required_score'],
+                        achieved_score=achieved_score,
+                        completion_time=completion_time
+                    )
+                    message = "Прогрессийн бичлэг амжилттай үүсгэгдлээ"
+                    status_code = 201
+                    
                 return JsonResponse({
                     "id": progress.id,
                     "test_id": progress.test_id.id,
                     "user_id": progress.user_id.id,
                     "required_score": str(progress.required_score),
                     "achieved_score": str(progress.achieved_score),
-                    "message": "Прогрессийн бичлэг амжилттай үүсгэгдлээ"
-                }, status=201)
+                    "completion_time": progress.completion_time,
+                    "message": message
+                }, status=status_code)
             else:
-                return JsonResponse({"error": "Алдаатай JSON формат"}, status=400)
+                return JsonResponse({"error": "Алдаатай JSON формат. Зөвхөн объект хүлээж авна."}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
+
+@csrf_exempt
+@jwt_required
+def leaderboard(request):
+    """Шилдэг тоглогчдын жагсаалт"""
+    if request.method == "GET":
+        # Хэрэглэгч бүрийн нийт оноо болон дуусгасан тестийн тоог авах
+        users_scores = User.objects.annotate(
+            total_points=Sum('progress__achieved_score'),
+            completed_quizzes=Count('progress'),
+            total_time=Sum('progress__completion_time')
+        ).filter(completed_quizzes__gt=0).order_by('-total_points', 'total_time')
+
+        data = []
+        for user in users_scores:
+            data.append({
+                "user_id": user.id,
+                "username": user.username,
+                "total_points": float(user.total_points or 0),
+                "completed_quizzes": user.completed_quizzes,
+                "total_time": user.total_time or 0
+            })
+
+        return JsonResponse({"status": 200, "data": data})
+    else:
+        return JsonResponse({"error": "Зөвхөн GET хүсэлт"}, status=405)
 
 @csrf_exempt
 @jwt_required

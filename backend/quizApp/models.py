@@ -35,7 +35,7 @@ class Question(models.Model):
     order = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.text} (Difficulty: {self.difficulty_level})"
+        return f"[{self.quiz.topic.title} > {self.quiz.title}] {self.text} (Difficulty: {self.difficulty_level})"
     
     class Meta:
         db_table = "Question"

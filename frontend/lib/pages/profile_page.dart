@@ -53,19 +53,21 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadStats() async {
     try {
       if (ApiService.userId != null) {
-        final scores = await ApiService.fetchUserScores(ApiService.userId!);
+        final progress = await ApiService.fetchUserProgress(ApiService.userId!);
         final allQuizzes = await ApiService.fetchQuizzes();
         
         if (mounted) {
           setState(() {
             _totalQuizzesCount = allQuizzes.length;
-            _completedQuizzesCount = scores.length;
-            if (scores.isNotEmpty) {
+            // Only count as completed if score is passing (>= 70)
+            _completedQuizzesCount = progress.where((p) => (double.tryParse(p['achieved_score'].toString()) ?? 0.0) >= 70.0).length;
+            
+            if (progress.isNotEmpty) {
               double sum = 0;
-              for (var score in scores) {
-                sum += (score['total_score'] as num).toDouble();
+              for (var p in progress) {
+                sum += (double.tryParse(p['achieved_score'].toString()) ?? 0.0);
               }
-              _averageScore = sum / scores.length;
+              _averageScore = sum / progress.length;
             } else {
               _averageScore = 0.0;
             }
@@ -91,7 +93,7 @@ class _ProfilePageState extends State<ProfilePage> {
           : _profile == null
               ? const Center(child: Text('Профайл ачааллахад алдаа гарлаа'))
               : RefreshIndicator(
-                  onRefresh: _loadProfile,
+                  onRefresh: _loadData,
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(AppSpacing.md),
@@ -108,6 +110,56 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ),
+    );
+  }
+
+  void _showEditUsernameDialog() {
+    final controller = TextEditingController(text: _profile!.username);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Нэр солих'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Шинэ нэр',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Болих'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newName = controller.text.trim();
+              if (newName.isEmpty) return;
+              
+              Navigator.pop(ctx);
+              setState(() => _loading = true);
+              
+              final ok = await ApiService.updateMyUsername(newName);
+              if (ok) {
+                await _loadProfile();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Хэрэглэгчийн нэр амжилттай солигдлоа')),
+                  );
+                }
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Нэр солиход алдаа гарлаа')),
+                  );
+                }
+              }
+              if (mounted) setState(() => _loading = false);
+            },
+            child: const Text('Хадгалах'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -129,7 +181,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: const TextStyle(
                       fontSize: 48,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -177,12 +229,7 @@ class _ProfilePageState extends State<ProfilePage> {
             
             // Edit button
             OutlinedButton.icon(
-              onPressed: () {
-                // Хийх зүйл: : Edit profile page руу шилжих
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Засах хуудас удахгүй нэмэгдэнэ')),
-                );
-              },
+              onPressed: _showEditUsernameDialog,
               icon: const Icon(Icons.edit),
               label: const Text('Засах'),
             ),

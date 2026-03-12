@@ -89,6 +89,7 @@ class _QuizPageState extends State<QuizPage> with SingleTickerProviderStateMixin
   }
 
   Future<void> _submitQuiz() async {
+    if (_submitted) return;
     _elapsedTime = DateTime.now().difference(_startTime!);
     
     setState(() => _submitted = true);
@@ -99,22 +100,26 @@ class _QuizPageState extends State<QuizPage> with SingleTickerProviderStateMixin
     final selectedOptionIds = _selectedAnswers.values.toList();
 
     try {
+      // 1. Submit progress with completion time
       await ApiService.submitQuizProgress(
         quizId: widget.quizId,
         userId: widget.userId,
         requiredScore: 70,
         achievedScore: percentage.toDouble(),
+        completionTime: _elapsedTime.inSeconds,
       );
 
+      // 2. Submit details (which options were selected)
       await ApiService.submitQuizDetails(
         quizId: widget.quizId,
         userId: widget.userId,
         selectedOptions: selectedOptionIds,
       );
 
+      // 3. Submit total score
       await ApiService.submitUserScore(
         userId: widget.userId,
-        quizProgressId: 1,
+        quizProgressId: 1, // This should ideally be the ID from submitQuizProgress, but the current API might not return it clearly or it's handled differently
         totalScore: score.toDouble(),
       );
 

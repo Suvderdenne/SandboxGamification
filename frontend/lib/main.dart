@@ -7,6 +7,8 @@ import 'pages/profile_page.dart';
 import 'pages/admin_page.dart';
 import 'pages/teacher_page.dart';
 import 'pages/register_page.dart';
+import 'pages/leaderboard_page.dart';
+import 'pages/my_progress_page.dart';
 import 'services/theme_service.dart';
 import 'utils/constants.dart';
 
@@ -80,6 +82,8 @@ class MyApp extends StatelessWidget {
             '/register': (context) => const RegisterPage(),
             '/topics': (context) => const TopicsPage(),
             '/profile': (context) => const ProfilePage(),
+            '/leaderboard': (context) => const LeaderboardPage(),
+            '/progress': (context) => const MyProgressPage(),
             '/admin': (context) => const AdminPage(),
             '/teacher': (context) => const TeacherPage(),
           },

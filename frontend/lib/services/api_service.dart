@@ -257,6 +257,7 @@ class ApiService {
     required int userId,
     required double requiredScore,
     required double achievedScore,
+    int completionTime = 0,
   }) async {
     try {
       final response = await http.post(
@@ -267,11 +268,94 @@ class ApiService {
           'user_id': userId,
           'required_score': requiredScore,
           'achieved_score': achievedScore,
+          'completion_time': completionTime,
         }),
       );
-      return response.statusCode == 201;
+      return response.statusCode == 201 || response.statusCode == 200;
     } catch (e) {
       return false;
+    }
+  }
+
+  // ========================
+  // LEADERBOARD
+  // ========================
+  static Future<List<Map<String, dynamic>>> fetchLeaderboard() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/test/leaderboard/'),
+        headers: _authHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final decoded = json.jsonDecode(response.body);
+        return (decoded['data'] as List).cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // ========================
+  // USERS (Admin)
+  // ========================
+  static Future<List<Map<String, dynamic>>> fetchUsers() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/users/'),
+        headers: _authHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final decoded = json.jsonDecode(response.body);
+        return (decoded['data'] as List).cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<bool> updateUsername(int id, String username) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/users/$id/'),
+        headers: _authHeaders(),
+        body: json.jsonEncode({'username': username}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ========================
+  // MY USERNAME UPDATE
+  // ========================
+  static Future<bool> updateMyUsername(String username) async {
+    if (userId == null) return false;
+    return updateUsername(userId!, username);
+  }
+
+  // ========================
+  // USER PROGRESS
+  // ========================
+  static Future<List<Map<String, dynamic>>> fetchUserProgress(int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/test/progress/'),
+        headers: _authHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final decoded = json.jsonDecode(response.body);
+        final List<dynamic> data = decoded['data'];
+        return data
+            .cast<Map<String, dynamic>>()
+            .where((p) => p['user_id'] == userId)
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
     }
   }
 

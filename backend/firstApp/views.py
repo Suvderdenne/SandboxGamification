@@ -118,6 +118,39 @@ def profile(request):
         "message": "Хэрэглэгчийн мэдээлэл амжилттай уншигдлаа"
     }, status=200)
 
+@csrf_exempt
+@jwt_required
+def user_list(request):
+    """Бүх хэрэглэгчдийн жагсаалт (Админ)"""
+    if request.method == "GET":
+        users = list(User.objects.all().values('id', 'username', 'email', 'verified'))
+        return JsonResponse({"status": 200, "data": users})
+    return JsonResponse({"error": "Зөвхөн GET хүсэлт"}, status=405)
+
+@csrf_exempt
+@jwt_required
+def user_update(request, user_id):
+    """Хэрэглэгчийн мэдээлэл шинэчлэх (Зөвхөн username)"""
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "Хэрэглэгч олдсонгүй"}, status=404)
+
+    if request.method == "PUT":
+        try:
+            data = json.loads(request.body)
+            if "username" in data:
+                new_username = data["username"]
+                if User.objects.filter(username=new_username).exclude(id=user.id).exists():
+                    return JsonResponse({"error": "Энэ нэр аль хэдийн ашиглагдсан байна"}, status=400)
+                user.username = new_username
+                user.save()
+                return JsonResponse({"message": "Хэрэглэгчийн нэр амжилттай шинэчлэгдлээ", "status": 200})
+            return JsonResponse({"error": "Username талбар шаардлагатай"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+    return JsonResponse({"error": "Зөвхөн PUT хүсэлт"}, status=405)
+
 
 
 @csrf_exempt

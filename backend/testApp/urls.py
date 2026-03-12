@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('progress/', views.quiz_progress_list),
     path('progress/<int:progress_id>/', views.quiz_progress_detail),
+    path('leaderboard/', views.leaderboard),
     path('details/', views.quiz_detail_list),
     path('details/<int:detail_id>/', views.quiz_detail_detail),
     path('scores/', views.user_score_list),
