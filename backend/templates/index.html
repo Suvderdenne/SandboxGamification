@@ -1,0 +1,48 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.png' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <title>Sandbox Club</title>
+</head>
+<body>
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="container">
+        <div class="logo-wrapper">
+            <div class="glow"></div>
+            <div class="rotating-light"></div>
+            <img src="{% static 'images/logo.png' %}" alt="Sandbox Logo" class="logo">
+            <div class="rotating-light-overlay"></div>
+        </div>
+        
+        <h1 class="title">Sandbox</h1>
+        <p class="subtitle">Game-Based Learning Platform</p>
+    </div>
+</body>
+<script>
+    const title = document.querySelector('.title');
+    const text = title.innerText;
+    title.innerHTML = '';
+
+    [...text].forEach(letter => {
+        const span = document.createElement('span');
+        span.textContent = letter === ' ' ? '\u00A0' : letter;
+        title.appendChild(span);
+    });
+</script>
+</html>

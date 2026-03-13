@@ -1,0 +1,4 @@
+- the test needs more variarety like input, true/false, text.
+- needs a way for teachers to see the results of students
+- import/export quizs from cvs or excel.
+- finish the app guys
